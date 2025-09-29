@@ -1,9 +1,20 @@
 const express = require('express');
 const session = require('express-session');
+const cors=require("cors");
 // ルートハンドラ設定を含むモジュールをインポート
 const routes = require('./routes');
 // Expressアプリケーションを作成
 const app = express();
+
+// ↓↓↓ フロントエンドのURLをここに設定 ↓↓↓
+const frontendURL = 'https://manpukuya-frontend.onrender.com';
+
+// 2. corsミドルウェアを設定
+app.use(cors({
+    origin: frontendURL, // ← 特定のオリジンからのリクエストを許可
+    credentials: true    // ← クッキー（セッション情報）の送受信を許可
+}));
+
 // URLエンコードのミドルウェアを設定
 app.use(express.urlencoded({ extended: false }));
 // JSON形式でパースするミドルウェアを設定
