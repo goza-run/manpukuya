@@ -84,7 +84,7 @@ function EditExpenseModal({expense,onClose,onSave}){
                 <div>
                     <label>写真：</label>
                     {expense.photo_path&&!newPhoto&&(
-                        <img src={expense.photo_path} alt="現在の写真" style={{ maxWidth: '100px', display: 'block' }} />
+                        <img src={`${process.env.VITE_UPLOADS_BASE_URL}/${expense.photo_path}`} alt="現在の写真" style={{ maxWidth: '100px', display: 'block' }} />
                     )}
                     <input
                         type="file"
