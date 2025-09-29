@@ -10,9 +10,15 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 // セッション管理のミドルウェアを設定
 app.use(session({
-	secret: 'your_secret_key',
-	resave: false,
-	saveUninitialized: true
+    // ↓↓↓ ここを修正 ↓↓↓
+    secret: process.env.SESSION_SECRET || 'your_secret_key',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production', // 本番環境ではhttps通信でのみクッキーを送信
+        httpOnly: true,
+        sameSite: 'lax'
+    }
 }));
 // publicディレクトリ内の静的ファイルを提供
 app.use(express.static('public'));
