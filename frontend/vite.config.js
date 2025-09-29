@@ -26,7 +26,7 @@ export default defineConfig({
   },
    // ↓↓↓ 本番環境用の設定を追加 ↓↓↓
   define: {
-    'process.env.VITE_API_BASE_URL': JSON.stringify(process.env.NODE_ENV === 'production' ? `https://${backendUrl}` : ''),
-    'process.env.VITE_UPLOADS_BASE_URL': JSON.stringify(process.env.NODE_ENV === 'production' ? `https://${backendUrl}` : '')
+    'process.env.VITE_API_BASE_URL': JSON.stringify(process.env.NODE_ENV === 'production' ? backendUrl : ''),
+    'process.env.VITE_UPLOADS_BASE_URL': JSON.stringify(process.env.NODE_ENV === 'production' ? backendUrl : '')
   }
 })
