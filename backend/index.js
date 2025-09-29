@@ -9,6 +9,7 @@ const app = express();
 
 // ↓↓↓ フロントエンドのURLをここに設定 ↓↓↓
 const frontendURL = 'https://manpukuya-frontend.onrender.com';
+app.set('trust proxy', 1);
 
 // 2. corsミドルウェアを設定
 app.use(cors({
@@ -31,9 +32,9 @@ app.use(session({
     resave: false,
     saveUninitialized: false, // falseに変更するのが一般的
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none',
         maxAge: 1000 * 60 * 60 * 24 * 7 // 例: 7日間有効
     }
 }));
