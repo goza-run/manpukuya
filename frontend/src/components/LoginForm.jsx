@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import API_BASE_URL from '../config';
 function LoginForm({ onLogin }) {
 	// ユーザー名とパスワードのステートを定義
 	const [username, setUsername] = useState('');//最初は空白の状態で置いとく
@@ -9,7 +10,7 @@ function LoginForm({ onLogin }) {
 	const handleSubmit = async (e) => {
 		e.preventDefault(); // フォームの送信アクション停止
 		// APIエンドポイントにログインリクエストを送信
-		const response = await fetch('/api/login', {
+		const response = await fetch(`${API_BASE_URL}/api/login`, {
 			method: 'POST', // POSTリクエスト
 			headers: {
 				'Content-Type': 'application/json', // タイプをJSONに設定 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ExpenseList from '../components/ExpenseList';
 import CommentModal from '../components/CommentModal';
+import API_BASE_URL from '../config';
+
 function AdminPage() {
     const [users, setUsers] = useState([]);
     const [error, setError] = useState('');
@@ -10,7 +12,7 @@ function AdminPage() {
     const[commenting,setIsCommenting]=useState(null);
     useEffect(() => {
         const fetchUsers = async () => {
-            const response = await fetch('/api/users');
+            const response = await fetch(`${API_BASE_URL}/api/users`);
             if (response.ok) {
                 const data = await response.json();
                 setUsers(data);
@@ -26,7 +28,7 @@ function AdminPage() {
 
         const fetchUserExpenses=async()=>{
             setIsLoading(true);
-            const response=await fetch(`/api/admin/expenses/${selectUser.id}`);
+            const response=await fetch(`${API_BASE_URL}/api/admin/expenses/${selectUser.id}`);
             if(response.ok){
                 const data=await response.json();
                 setExpenses(data);
@@ -39,7 +41,7 @@ function AdminPage() {
     },[selectUser]);//selectUserが変わったときだけ実行
     const handleAdminDeleteExpense=async(expenseId)=>{
         if(!window.confirm("本当にこの投稿を削除しますか？")) return;
-        const response=await fetch(`/api/admin/expenses/${expenseId}`,{
+        const response=await fetch(`${API_BASE_URL}/api/admin/expenses/${expenseId}`,{
             method:"DELETE",
         });
         if (response.ok){

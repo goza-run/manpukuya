@@ -1,11 +1,12 @@
 import React,{useState,useEffect} from "react";
 import CommentItem from "./CommentItem";
 import CommentForm from "./CommentForm";
+import API_BASE_URL from "../config";
 
 function CommentModal({expense,onClose}){
     const [comments,setComments]=useState([]);
     const fetchComment=async()=>{
-        const response=await fetch(`/api/expenses/${expense.id}/comments`);
+        const response=await fetch(`${API_BASE_URL}/api/expenses/${expense.id}/comments`);
         if(response.ok){
             const data=await response.json();
             setComments(data);
@@ -16,7 +17,7 @@ function CommentModal({expense,onClose}){
     },[expense.id]);//モーダルが開かれたらコメントを取得
 
     const handleAddComment=async(content)=>{
-        const response=await fetch(`/api/expenses/${expense.id}/comments`,{
+        const response=await fetch(`${API_BASE_URL}/api/expenses/${expense.id}/comments`,{
             method:"POST",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({content},)

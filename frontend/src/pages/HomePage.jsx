@@ -6,6 +6,7 @@ import ExpenseForm from '../components/ExpenseForm';
 import EditExpenseModal from "../components/EditExpenseModal";
 import Budget from "../components/Budget";
 import CommentModal from "../components/CommentModal";
+import API_BASE_URL from "../config";
 
 function HomePage({ onLogout }) {
 	// 食費データの配列を管理するステートを定義
@@ -20,13 +21,13 @@ function HomePage({ onLogout }) {
 	// 食費データ、目標金額を取得する非同期関数
 	const fetchExpense = async () => {
 		// 食費データを取得するAPIリクエスト
-		const expenseResponse = await fetch('/api/expenses');//methodを指定していないためrouter.getの方が出る
+		const expenseResponse = await fetch(`${API_BASE_URL}/api/expenses`);//methodを指定していないためrouter.getの方が出る
 		if (expenseResponse.ok) { // レスポンスが成功した場合 
 			const expenseData = await expenseResponse.json(); // JSONデータを取得
 			setExpense(expenseData); // ステートにセット
 		}
 		//目標データを取得するAPIリクエスト
-		const budgetResponse=await fetch(`/api/budget/${currentMonth}`);
+		const budgetResponse=await fetch(`${API_BASE_URL}/api/budget/${currentMonth}`);
 		if(budgetResponse.ok){
 			const budgetData=await budgetResponse.json();
 			setBudget(budgetData);
@@ -37,7 +38,7 @@ function HomePage({ onLogout }) {
 	}, [currentMonth]);//月が変わったら再取得
 	//目標金額を設定する関数
 	const handleSetBudget=async (amount)=>{
-		const response=await fetch("/api/budget",{
+		const response=await fetch(`${API_BASE_URL}/api/budget`,{
 			method:"POST",
 			headers:{"Content-Type":"application/json"},
 			body:JSON.stringify({month:currentMonth,amount:amount})	
@@ -50,7 +51,7 @@ function HomePage({ onLogout }) {
 	const handleAddExpense = async (formData) => {
 	//ExpenseFormからもらった情報をformDataというもの1つにまとめてる
 	// (別にformDataって名前じゃなくてもいいけどこっちの方が手間が省ける)
-		const response = await fetch('/api/expenses', {
+		const response = await fetch(`${API_BASE_URL}/api/expenses`, {
 			method: 'POST', // POSTリクエスト
 			body: formData, 
 		});
@@ -60,7 +61,7 @@ function HomePage({ onLogout }) {
 	};
 	// 食費データを削除するための非同期関数
 	const handleDeleteExpense = async (id) => {
-		const response = await fetch(`/api/expenses/${id}`, {
+		const response = await fetch(`${API_BASE_URL}/api/expenses/${id}`, {
 			method: 'DELETE', // DELETEリクエスト
 		});
 
@@ -73,7 +74,7 @@ function HomePage({ onLogout }) {
 	//食事データを編集
 	
 	const handleUpdateExpense=async (id,formData)=>{
-		const response=await fetch(`/api/expenses/${id}`,{
+		const response=await fetch(`${API_BASE_URL}/api/expenses/${id}`,{
 			method:"PUT",
 			body:formData,
 			//JSONはテキストや数値だけの時優秀、ファイルを使うときはformdata

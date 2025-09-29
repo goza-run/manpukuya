@@ -1,6 +1,7 @@
 import React, {use, useState} from "react";
 import "./EditExpenseModal.css";
 import heic2any from "heic2any";
+import API_BASE_URL from "../config";
 
 function EditExpenseModal({expense,onClose,onSave}){
     const[amount,setAmount]=useState(expense.amount);
@@ -84,7 +85,7 @@ function EditExpenseModal({expense,onClose,onSave}){
                 <div>
                     <label>写真：</label>
                     {expense.photo_path&&!newPhoto&&(
-                        <img src={`${process.env.VITE_UPLOADS_BASE_URL}/${expense.photo_path}`} alt="現在の写真" style={{ maxWidth: '100px', display: 'block' }} />
+                        <img src={`${API_BASE_URL}/${expense.photo_path}`} alt="現在の写真" style={{ maxWidth: '100px', display: 'block' }} />
                     )}
                     <input
                         type="file"

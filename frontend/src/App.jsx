@@ -3,6 +3,7 @@ import './App.css'
 import LoginPage from "./pages/LoginPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import AdminPage from './pages/AdminPage.jsx';
+import API_BASE_URL from './config.js';
 
 function App() {
   //ログイン認証のステート
@@ -16,7 +17,7 @@ function App() {
 // (これがないといちいち打ち込んでログインしないといけない)
   useEffect(()=>{
     const checkLoginStatus=async()=>{
-      const response=await fetch("/api/session");
+      const response=await fetch(`${API_BASE_URL}/api/session`);
 //routes.jsでセッション中だったらtrue,そうでなければfalseが帰ってくる
       const data=await response.json();
       setIsLoggedIn(data.isLoggedIn);//ここのtrueかfalseかに従って画面が切り替わる
@@ -27,14 +28,14 @@ function App() {
   },[]);//空の配列を指定して最初のマウント時(初めて画面が出力される瞬間)に一度実行されるようになる
 
   const handleLogin=async()=>{
-    const response=await fetch("/api/session");
+    const response=await fetch(`${API_BASE_URL}/api/session`);
     const data=await response.json();
     setIsLoggedIn(data.isLoggedIn);
     setRole(data.role)
   };
 
   const handleLogout=async()=>{
-    const response=await fetch("/api/logout",{
+    const response=await fetch(`${API_BASE_URL}/api/logout`,{
       method: "POST"
     });
     if(response.ok){

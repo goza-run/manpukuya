@@ -1,3 +1,5 @@
+import API_BASE_URL from "../config";
+
 const mealTypeMap={
 	breakfast:"朝ごはん",
 	lunch:"昼ごはん",
@@ -18,7 +20,7 @@ function ExpenseItem({ expense, onDelete,onEdit,onOpenComments }) {//onDelete=on
 			{expense.photo_path&&(
 //expense.photo_path=trueであれば以下を実行
 				<img
-					src={`${process.env.VITE_UPLOADS_BASE_URL}/${expense.photo_path}`}
+					src={`${API_BASE_URL}/${expense.photo_path}`}
 					alt="食費の記録写真"
 					style={{maxWidth:"200px",height:"auto"}}
 				/>
