@@ -19,7 +19,8 @@ function LoginForm({ onLogin }) {
 			body: JSON.stringify({ username,password}),
 		});
 		if (response.ok) { // レスポンスが成功した場合
-			onLogin();
+			const userData= await response.json();
+			onLogin(userData);
  // onLogin関数を呼び出す、app.jsx=>LoginPage.jsx=>LoginFormの流れに従ってhandleLogin関数になっている
 		} else {
 			setError('Invalid username or password'); // エラーを設定

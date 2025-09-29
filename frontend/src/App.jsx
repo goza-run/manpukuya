@@ -27,11 +27,9 @@ function App() {
     checkLoginStatus();
   },[]);//空の配列を指定して最初のマウント時(初めて画面が出力される瞬間)に一度実行されるようになる
 
-  const handleLogin=async()=>{
-    const response=await fetch(`${API_BASE_URL}/api/session`);
-    const data=await response.json();
-    setIsLoggedIn(data.isLoggedIn);
-    setRole(data.role)
+  const handleLogin=async(user)=>{
+    setIsLoggedIn(true);
+    setRole(user.role)
   };
 
   const handleLogout=async()=>{
