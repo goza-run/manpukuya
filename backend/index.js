@@ -3,6 +3,7 @@ const session = require('express-session');
 const cors=require("cors");
 // ルートハンドラ設定を含むモジュールをインポート
 const routes = require('./routes');
+const SQLiteStore = require('connect-sqlite3')(session);
 // Expressアプリケーションを作成
 const app = express();
 
@@ -21,14 +22,19 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 // セッション管理のミドルウェアを設定
 app.use(session({
-    // ↓↓↓ ここを修正 ↓↓↓
-    secret: process.env.SESSION_SECRET || 'your_secret_key',
+    store: new SQLiteStore({
+        db: 'db.sqlite', // 保存先のDBファイル
+        dir: './',       // DBファイルがあるディレクトリ
+        table: 'sessions'// セッションを保存するテーブル名
+    }),
+    secret: process.env.SESSION_SECRET || 'your_secret_key_dev',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false, // falseに変更するのが一般的
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // 本番環境ではhttps通信でのみクッキーを送信
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: 'lax'
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 60 * 24 * 7 // 例: 7日間有効
     }
 }));
 // publicディレクトリ内の静的ファイルを提供
