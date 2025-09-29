@@ -17,7 +17,9 @@ function App() {
 // (これがないといちいち打ち込んでログインしないといけない)
   useEffect(()=>{
     const checkLoginStatus=async()=>{
-      const response=await fetch(`${API_BASE_URL}/api/session`);
+      const response=await fetch(`${API_BASE_URL}/api/session`,{
+        credentials: 'include'
+      });
 //routes.jsでセッション中だったらtrue,そうでなければfalseが帰ってくる
       const data=await response.json();
       setIsLoggedIn(data.isLoggedIn);//ここのtrueかfalseかに従って画面が切り替わる
@@ -34,7 +36,8 @@ function App() {
 
   const handleLogout=async()=>{
     const response=await fetch(`${API_BASE_URL}/api/logout`,{
-      method: "POST"
+      method: "POST",
+      credentials: 'include'
     });
     if(response.ok){
       setIsLoggedIn(false); 

@@ -6,7 +6,9 @@ import API_BASE_URL from "../config";
 function CommentModal({expense,onClose}){
     const [comments,setComments]=useState([]);
     const fetchComment=async()=>{
-        const response=await fetch(`${API_BASE_URL}/api/expenses/${expense.id}/comments`);
+        const response=await fetch(`${API_BASE_URL}/api/expenses/${expense.id}/comments`,{
+            credentials: 'include'
+        });
         if(response.ok){
             const data=await response.json();
             setComments(data);
@@ -20,7 +22,8 @@ function CommentModal({expense,onClose}){
         const response=await fetch(`${API_BASE_URL}/api/expenses/${expense.id}/comments`,{
             method:"POST",
             headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({content},)
+            body:JSON.stringify({content}),
+            credentials: 'include'
         });
         if (response.ok){
             fetchComment();//投稿が成功したらリストを再取得して更新

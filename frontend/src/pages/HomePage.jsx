@@ -21,13 +21,17 @@ function HomePage({ onLogout }) {
 	// 食費データ、目標金額を取得する非同期関数
 	const fetchExpense = async () => {
 		// 食費データを取得するAPIリクエスト
-		const expenseResponse = await fetch(`${API_BASE_URL}/api/expenses`);//methodを指定していないためrouter.getの方が出る
+		const expenseResponse = await fetch(`${API_BASE_URL}/api/expenses`,{
+			credentials: 'include'
+		});//methodを指定していないためrouter.getの方が出る
 		if (expenseResponse.ok) { // レスポンスが成功した場合 
 			const expenseData = await expenseResponse.json(); // JSONデータを取得
 			setExpense(expenseData); // ステートにセット
 		}
 		//目標データを取得するAPIリクエスト
-		const budgetResponse=await fetch(`${API_BASE_URL}/api/budget/${currentMonth}`);
+		const budgetResponse=await fetch(`${API_BASE_URL}/api/budget/${currentMonth}`,{
+			credentials: 'include'
+		});
 		if(budgetResponse.ok){
 			const budgetData=await budgetResponse.json();
 			setBudget(budgetData);
@@ -41,7 +45,8 @@ function HomePage({ onLogout }) {
 		const response=await fetch(`${API_BASE_URL}/api/budget`,{
 			method:"POST",
 			headers:{"Content-Type":"application/json"},
-			body:JSON.stringify({month:currentMonth,amount:amount})	
+			body:JSON.stringify({month:currentMonth,amount:amount}),
+			credentials: 'include'	
 		});
 		if(response.ok){
 			fetchExpense();
@@ -53,7 +58,8 @@ function HomePage({ onLogout }) {
 	// (別にformDataって名前じゃなくてもいいけどこっちの方が手間が省ける)
 		const response = await fetch(`${API_BASE_URL}/api/expenses`, {
 			method: 'POST', // POSTリクエスト
-			body: formData, 
+			body: formData,
+			credentials: 'include' 
 		});
 		if (response.ok) { // レスポンスが成功した場合
 			fetchExpense(); // リストを再取得して更新
@@ -63,6 +69,7 @@ function HomePage({ onLogout }) {
 	const handleDeleteExpense = async (id) => {
 		const response = await fetch(`${API_BASE_URL}/api/expenses/${id}`, {
 			method: 'DELETE', // DELETEリクエスト
+			credentials: 'include'
 		});
 
 		if (response.ok) { // レスポンスが成功した場合
@@ -77,6 +84,7 @@ function HomePage({ onLogout }) {
 		const response=await fetch(`${API_BASE_URL}/api/expenses/${id}`,{
 			method:"PUT",
 			body:formData,
+			credentials: 'include'
 			//JSONはテキストや数値だけの時優秀、ファイルを使うときはformdata
 		});
 		if (response.ok){

@@ -12,7 +12,9 @@ function AdminPage() {
     const[commenting,setIsCommenting]=useState(null);
     useEffect(() => {
         const fetchUsers = async () => {
-            const response = await fetch(`${API_BASE_URL}/api/users`);
+            const response = await fetch(`${API_BASE_URL}/api/users`,{
+                credentials: 'include'
+            });
             if (response.ok) {
                 const data = await response.json();
                 setUsers(data);
@@ -28,7 +30,9 @@ function AdminPage() {
 
         const fetchUserExpenses=async()=>{
             setIsLoading(true);
-            const response=await fetch(`${API_BASE_URL}/api/admin/expenses/${selectUser.id}`);
+        const response=await fetch(`${API_BASE_URL}/api/admin/expenses/${selectUser.id}`,{
+            credentials: 'include'
+        });
             if(response.ok){
                 const data=await response.json();
                 setExpenses(data);
@@ -43,6 +47,7 @@ function AdminPage() {
         if(!window.confirm("本当にこの投稿を削除しますか？")) return;
         const response=await fetch(`${API_BASE_URL}/api/admin/expenses/${expenseId}`,{
             method:"DELETE",
+            credentials: 'include'
         });
         if (response.ok){
             setExpenses(expenses.filter(exp=>exp.id!==expenseId))
