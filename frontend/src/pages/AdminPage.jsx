@@ -63,7 +63,7 @@ function AdminPage() {
         <div>
             <h2>管理者ページ - ユーザー一覧</h2>
             <p>ユーザー名をクリックして投稿内容を確認</p>
-            <table border="1" style={{ width: '10g0%', borderCollapse: 'collapse' }}>
+            <table border="1" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                     <tr>
                         <th>ID</th>
