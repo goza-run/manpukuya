@@ -2,16 +2,19 @@ const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const bcrypt =require("bcrypt")
 
+const isProduction = process.env.NODE_ENV === 'production';
+const dbPath = isProduction ? '/data/db.sqlite' : './db.sqlite';
+
 // データベース接続を開く関数
 async function openDb() {
     return open({
-        filename: '/data/db.sqlite', // ファイル名を統一
+        filename: dbPath, // ファイル名を統一
         driver: sqlite3.Database
     });
 }
 
 // データベース接続のPromiseを一度だけ生成
-const dbPromise = openDb();
+const dbPromise = openDb()
 
 /**
  * データベースを初期化し、必要なテーブルを作成する

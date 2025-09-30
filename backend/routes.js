@@ -19,12 +19,15 @@ const{
 }=require("./db");
 const e = require('express');
 const router =express.Router();
+const isProduction = process.env.NODE_ENV === 'production';
+const uploadsDir = isProduction ? '/data/uploads' : 'uploads';
+
 //画像フォルダの設定
 const storage=multer.diskStorage({
     destination:function(req,file,cb){
 //destination=保存先フォルダ
-        cb(null,"/data/uploads/")//cb=call back
-//エラーがなければ(null)、保存先をuploads/フォルダにしろという指示
+        cb(null,uploadsDir)//cb=call back
+//エラーがなければ(null)、保存先をuploadDirにしろという指示
     },
     filename:function(req,file,cb){
         cb(null,Date.now()+"-"+file.originalname);
