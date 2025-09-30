@@ -23,7 +23,7 @@ const router =express.Router();
 const storage=multer.diskStorage({
     destination:function(req,file,cb){
 //destination=保存先フォルダ
-        cb(null,"uploads/")//cb=call back
+        cb(null,"/data/uploads/")//cb=call back
 //エラーがなければ(null)、保存先をuploads/フォルダにしろという指示
     },
     filename:function(req,file,cb){

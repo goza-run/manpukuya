@@ -5,7 +5,7 @@ const bcrypt =require("bcrypt")
 // データベース接続を開く関数
 async function openDb() {
     return open({
-        filename: './db.sqlite', // ファイル名を統一
+        filename: '/data/db.sqlite', // ファイル名を統一
         driver: sqlite3.Database
     });
 }

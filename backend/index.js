@@ -1,4 +1,6 @@
 const express = require('express');
+const fs = require("fs");
+const path = require("path");
 const session = require('express-session');
 const cors=require("cors");
 // ルートハンドラ設定を含むモジュールをインポート
@@ -6,6 +8,11 @@ const routes = require('./routes');
 const SQLiteStore = require('connect-sqlite3')(session);
 // Expressアプリケーションを作成
 const app = express();
+
+const uploadsDir = path.join('/data', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // ↓↓↓ フロントエンドのURLをここに設定 ↓↓↓
 const frontendURL = 'https://manpukuya-frontend.onrender.com';
@@ -25,7 +32,7 @@ app.use(express.json());
 app.use(session({
     store: new SQLiteStore({
         db: 'db.sqlite', // 保存先のDBファイル
-        dir: './',       // DBファイルがあるディレクトリ
+        dir: '/data',       // DBファイルがあるディレクトリ
         table: 'sessions'// セッションを保存するテーブル名
     }),
     secret: process.env.SESSION_SECRET || 'your_secret_key_dev',
