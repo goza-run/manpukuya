@@ -14,7 +14,7 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// ↓↓↓ フロントエンドのURLをここに設定 ↓↓↓
+/* ↓↓↓ フロントエンドのURLをここに設定 ↓↓↓
 const frontendURL = 'https://manpukuya-frontend.onrender.com';
 app.set('trust proxy', 1);
 
@@ -23,7 +23,7 @@ app.use(cors({
     origin: frontendURL, // ← 特定のオリジンからのリクエストを許可
     credentials: true    // ← クッキー（セッション情報）の送受信を許可
 }));
-
+*/
 // URLエンコードのミドルウェアを設定
 app.use(express.urlencoded({ extended: false }));
 // JSON形式でパースするミドルウェアを設定
