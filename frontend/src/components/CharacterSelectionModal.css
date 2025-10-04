@@ -1,0 +1,25 @@
+.character-grid {
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.character-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.character-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.character-card img {
+    border-radius: 50%;
+    background-color: #f0f0f0;
+}

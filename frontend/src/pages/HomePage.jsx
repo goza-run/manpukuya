@@ -6,9 +6,11 @@ import ExpenseForm from '../components/ExpenseForm';
 import EditExpenseModal from "../components/EditExpenseModal";
 import Budget from "../components/Budget";
 import CommentModal from "../components/CommentModal";
+import CharacterSelectionModal from "../components/CharacterSelectionModal";
+import{characters,defaultCharacter} from "../characters";
 import API_BASE_URL from "../config";
 
-function HomePage({ onLogout,session}) {
+function HomePage({ onLogout,session,onCharacterSelect }) {
 	// 食費データの配列を管理するステートを定義
 	const [expenses, setExpense] = useState([]);
 	const[budget,setBudget]=useState(null);
@@ -16,6 +18,7 @@ function HomePage({ onLogout,session}) {
 	const[isEditModal,setIsEditModal]=useState(false);//モーダル=ちっちゃいウィンドウ
 	const[editing,setIsEditing]=useState(null);
 	const[commenting,setIsCommenting]=useState(null);
+	const[isCharacterModal,setIsCharacterModal]=useState(false);
 
 // []の中身がどんな時expenseを実行するかと言うもので今回みたいな空白の場合はページを開いた時のみになる
 	// 食費データ、目標金額を取得する非同期関数
@@ -121,10 +124,34 @@ function HomePage({ onLogout,session}) {
 	//reduceは集約処理、sumはこれまでの計算結果の保持、expenseが現在処理している配列の要素(別にexpenseである必要はない、ただの変数)
 	//expensesのデータの1つ1つをexpenseで取り出し、そのうちamountのデータを取り出して1個ずつ計算する
 	//sumの初期値は0
+	const selectedCharacter=characters.find(char=>char.id===session.selected_character)||defaultCharacter;
+	//session.selected_characterがnullのときにエラーになるのを防ぐために||defaultcharacterをつけている
+	//selectedCharacter={id:"char0",name:"まんぷくん",imageUrl:"/Manpukun.png"}みたいな感じ
 	return (//onLogout=handleLogout
 		<div>
-			<h2>満伏屋</h2>
+			<div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"10px"}}>
+				<h2>満伏屋</h2>
+				<div style={{display:"flex",alignItems:"center",gap:"10px"}}>
+					<img
+						src={selectedCharacter.imageUrl}
+						alt={selectedCharacter.name}
+						style={{width:"100px",height:"100px"}}
+					/>
+					<br/>
+				</div>
+			</div>
 			<hr/>
+			<div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"20px"}}>
+				<span style={{fontWeight:"bold",}}>お供：{selectedCharacter.name}</span>
+				<button onClick={()=>setIsCharacterModal(true)}>お供を変更</button>
+			</div>
+			{isCharacterModal&&(
+				<CharacterSelectionModal
+					onClose={()=>setIsCharacterModal(false)}
+					onCharacterSelect={onCharacterSelect}
+				/>
+			)}
+			
 			<h3>{currentMonth}月の目標金額</h3>
 			<Budget budget={budget} onSetBudget={handleSetBudget}/>
 			<h3>食事を記録してね</h3>

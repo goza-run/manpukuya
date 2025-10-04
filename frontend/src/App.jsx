@@ -4,6 +4,8 @@ import LoginPage from "./pages/LoginPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import AdminPage from './pages/AdminPage.jsx';
 import API_BASE_URL from './config.js';
+import { defaultCharacter } from './characters.js';
+import { characters } from './characters.js';
 
 function App() {
   //ログイン認証のステート
@@ -28,13 +30,56 @@ function App() {
       setSession({
         isLoggedIn:data.isLoggedIn,
         role:data.role,
-        userId:data.userId
+        userId:data.userId,
+        selected_character:data.selected_character
       });
       setIsLoading(false);
     };
     checkLoginStatus();
   },[]);//空の配列を指定して最初のマウント時(初めて画面が出力される瞬間)に一度実行されるようになる
 
+  //sessionが変わるたびにアイコンを更新
+   useEffect(() => {
+    if (session.isLoggedIn && session.selected_character) {
+        const characterId = session.selected_character;
+        const characterInfo=characters.find(char => char.id === characterId)||defaultCharacter;
+        const characterName = characterInfo.name;
+
+        const favicon=document.getElementById("favicon");
+        if(favicon){
+            favicon.href=`/${characterId}.png`;
+        }
+        const appleIcon=document.getElementById("apple-touch-icon");
+        if(appleIcon){
+            appleIcon.href=`/${characterId}.png`;
+        }
+        const manifestLink=document.getElementById("manifest");
+        if(manifestLink){
+            const manifestData={
+                "name":"満伏屋 with ${characterName}",
+                "short_name":characterName,
+                "icons":[
+                    {
+                        "src":`/${characterId}.png`,
+                        "sizes":"192x192",
+                        "type":"image/png"
+                    },
+                    {
+                        "src":`/${characterId}.png`,
+                        "sizes":"512x512",
+                        "type":"image/png"
+                    }
+                ],
+                "start_url":".",
+                "display":"standalone",
+                "theme_color":"#ffffff",
+                "background_color":"#ffffff"
+            };
+            const blob=new Blob([JSON.stringify(manifestData)],{type:"application/json"});
+            const manifestURL=URL.createObjectURL(blob);
+            manifestLink.href=manifestURL;
+        }
+  }},[session.selected_character,session.isLoggedIn]);
   const handleLogin=async(user)=>{
     //user={id:1,username:"xxx",role:"admin"}みたいな感じ
     setSession({
@@ -59,7 +104,14 @@ function App() {
       setView("home");
     }
   };
+  const handleCharacterSelect=async(newCharacter)=>{
+    setSession(prevSession=>({
+      ...prevSession,
+      selected_character:newCharacter
+    }));
+  };
 
+    //バックエンドにも更新を送る
   if(isLoading){//上のuseEffectが機能していれば必ずfalseになる
     return<div>Loading...</div>
   }
@@ -83,7 +135,7 @@ function App() {
             <button onClick={handleLogout}>ログアウト</button>
           </nav>
 
-          {view==="home" && <HomePage session={session}/>}
+          {view==="home" && <HomePage session={session} onCharacterSelect={handleCharacterSelect}/>}
           {view==="admin" && session.role === "admin"&&<AdminPage session={session}/>}
         </div>
 			) : (
