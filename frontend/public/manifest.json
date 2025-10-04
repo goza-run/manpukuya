@@ -1,0 +1,17 @@
+
+{
+  "short_name": "満腹屋",
+  "name": "食費管理アプリ 満腹屋",
+  "icons": [
+    {
+      "src": "/manpukuya_icon_kao.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "$comment": "androidでホーム画面に追加したときの表示を調整するために追加"
+}
