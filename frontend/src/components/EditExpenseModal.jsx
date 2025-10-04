@@ -8,6 +8,7 @@ function EditExpenseModal({expense,onClose,onSave}){
     const[description,setDescription]=useState(expense.description);
     const[expense_date,setExpenseDate]=useState(expense.expense_date);
     const[meal_type,setMealType]=useState(expense.meal_type);
+    const[nomikai,setNomikai]=useState(expense.nomikai);
     const[newPhoto,setNewPhoto]=useState("null")
     const [isConverting, setIsConverting] = useState(false);
     const handleFileChange=async(e)=>{
@@ -47,6 +48,11 @@ function EditExpenseModal({expense,onClose,onSave}){
         formData.append("description",description);
         formData.append("expense_date",expense_date)
         formData.append("meal_type",meal_type);
+        if (meal_type==="nomikai"){
+            formData.append("nomikai",nomikai);
+        }else{
+            formData.append("nomikai",0);
+        }
         if(newPhoto){
             formData.append("photo",newPhoto);
         }
@@ -70,13 +76,27 @@ function EditExpenseModal({expense,onClose,onSave}){
                     <option value="lunch">昼</option>
                     <option value="dinner">夜</option>
                     <option value="other">その他</option>
+                    <option value="nomikai">飲み会</option>
                 </select>
+                {meal_type==="nomikai"?(
+                <input
+                    type="number"
+                    value={nomikai}
+                    onChange={(e)=>{setNomikai(e.target.value);
+                            setAmount(1000);//飲み会代は食費に1000円で自動設定}
+                            }}
+                    placeholder="飲み会費用"
+                    required
+                />
+                )
+                :
                 <input
                     type="number"
                     value={amount}
                     onChange={(e)=>setAmount(e.target.value)}
                     required
                 />
+                }
                 <textarea
                     value={description}
                     onChange={(e)=>setDescription(e.target.value)}

@@ -20,6 +20,7 @@ function ExpenseForm({onAddExpense}){//onAddExpense=handleAddExpense
     const[description,setDescription]=useState("");
     const[expense_date,setExpenseDate]=useState(getTodayString());//初期値は今日の日付にしておく
     const[meal_type,setMealType]=useState("breakfast")//初期値は朝にしておく
+    const[nomikai,setNomikai]=useState(0);//初期値は0にしておく
 //スマホの画像ファイルを変換するシステム
     const handleFileChange=async(e)=>{
         const file=e.target.files[0];
@@ -63,7 +64,7 @@ function ExpenseForm({onAddExpense}){//onAddExpense=handleAddExpense
         if (photo){//このphotoはバックエンドのupload.single("photo")と名前を合わせる
             formData.append("photo",photo);
         }
-
+        formData.append("nomikai",nomikai);
         await onAddExpense(formData);//それをonAddExpense関数に当てて追加してもらう
         setAmount("");//追加した後は入力ステートを初期化
         setPhoto(null);
@@ -89,7 +90,20 @@ function ExpenseForm({onAddExpense}){//onAddExpense=handleAddExpense
             <option value="lunch">昼</option>
             <option value="dinner">夜</option>
             <option value="other">その他</option>
+            <option value="nomikai">飲み会</option>
         </select>
+        {meal_type==="nomikai"?
+        <input
+            type="number"
+            value={nomikai}
+            onChange={(e)=>{setNomikai(e.target.value);
+                            setAmount(1000);//飲み会代は食費に1000円で自動設定
+                }
+            }
+            placeholder="飲み会費用"
+            required
+        />
+        :
         <input
             type="number"
             value={amount}//valueは入力欄に表示される値
@@ -97,7 +111,7 @@ function ExpenseForm({onAddExpense}){//onAddExpense=handleAddExpense
 //setAmountを今入力した値にすることでamountに入力したものがそのまま出力される
             placeholder="Amount"
             required
-        />
+        />}
         <input
             type="file"
             accept="image/*,.heic,.heif"//画像ファイル、HEIC/HEIFのみOK

@@ -21,6 +21,7 @@ function LoginForm({ onLogin }) {
 		});
 		if (response.ok) { // レスポンスが成功した場合
 			const userData= await response.json();
+			// userDataにはuserIdではなくid,username,roleが入っている
 			onLogin(userData);
  // onLogin関数を呼び出す、app.jsx=>LoginPage.jsx=>LoginFormの流れに従ってhandleLogin関数になっている
 		} else {

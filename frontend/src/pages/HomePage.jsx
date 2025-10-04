@@ -8,7 +8,7 @@ import Budget from "../components/Budget";
 import CommentModal from "../components/CommentModal";
 import API_BASE_URL from "../config";
 
-function HomePage({ onLogout }) {
+function HomePage({ onLogout,session}) {
 	// 食費データの配列を管理するステートを定義
 	const [expenses, setExpense] = useState([]);
 	const[budget,setBudget]=useState(null);
@@ -133,14 +133,18 @@ function HomePage({ onLogout }) {
 			<h3>食事内容</h3>
 			{sortedMonths.map(month=>{//sortedMonthsから月を順番にmonthに代入していく
 				const monthlyExpenses=groupedExpenses[month];
-				const monthlyTotal=monthlyExpenses.reduce((sum,expense)=>sum+expense.amount,0);
+				const monthlyTotalExpense=monthlyExpenses.reduce((sum,expense)=>sum+expense.amount,0);
+				const monthlyTotalNomikai=monthlyExpenses.reduce((sum,expense)=>sum+(expense.nomikai? expense.nomikai:0),0);
+				const monthlyTotal=monthlyExpenses.reduce((sum,expense)=>sum+expense.amount+(expense.nomikai? Number(expense.nomikai)-1000:0),0);
+				const nomikainumber=monthlyExpenses.filter(expense=>expense.meal_type==="nomikai").length;
 			//複数のシステムをグループ化するためにReact.Fragmentを用いる
 				const monthlyBudget=month===currentMonth? budget:null;
-				const remainingAmount=monthlyBudget? monthlyBudget.amount-monthlyTotal:null;
+				const remainingAmount=monthlyBudget? monthlyBudget.amount-monthlyTotalExpense:null;
 				const budgetStatusClass=remainingAmount<0 ? "budget-over":"budget-in-range"
 				return(
 					<React.Fragment key={month}>
-						<h2>{month}(合計：{monthlyTotal}円)</h2>
+						<h2>{month}  合計：{monthlyTotal}円<br></br>
+						食費：{monthlyTotalExpense}円、飲み会({nomikainumber}回)：{monthlyTotalNomikai}円</h2>
 						{remainingAmount!==null&&(
 							<p className={budgetStatusClass}>
 							目標まであと：{remainingAmount}円
@@ -169,6 +173,7 @@ function HomePage({ onLogout }) {
 				<CommentModal
 					expense={commenting}
 					onClose={()=>setIsCommenting(null)}
+					session={session}
 				/>
 			)}
 		</div>

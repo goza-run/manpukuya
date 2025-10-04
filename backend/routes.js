@@ -14,8 +14,10 @@ const{
     updateExpenseById,
     getBudget,
     setBudget,
+    getCommentById,
     getCommentByExpenseId,
-    createComment
+    createComment,
+    deleteCommentById
 }=require("./db");
 const e = require('express');
 const router =express.Router();
@@ -42,10 +44,11 @@ router.post("/login",async(req,res)=>{
     //もらったパスワードをauthenticateUserへ渡す
     const user=await authenticateUser(username,password);//なかったらnull返すよ
     if(user){
+        //セッションにユーザー情報を保存
         req.session.userId=user.id;//userIdを保存
         req.session.username=user.username;
         req.session.role=user.role;//adminかuserかを記録
-        res.status(200).json({
+        res.status(200).json({//フロントエンドに送る情報
             id:user.id,
             username:user.username,
             role:user.role
@@ -71,7 +74,8 @@ router.get("/session",(req,res)=>{
         res.status(200).json({
             isLoggedIn:true,
             username:req.session.username,
-            role:req.session.role
+            role:req.session.role,
+            userId:req.session.userId
             //上のauthenticateUserからusernameは受け取っている
         });
     }else{
@@ -92,7 +96,7 @@ router.post("/expenses",upload.single("photo"),async(req,res)=>{//singleで一�
     if (!req.session.userId){
         return res.status(401).send("Unauthorized");
     }
-    const{amount,description,expense_date,meal_type}=req.body//テキストデータは打ち込んだ情報からもらう
+    const{amount,description,expense_date,meal_type,nomikai}=req.body//テキストデータは打ち込んだ情報からもらう
     let photo_path = null; // photo_pathをnullで初期化
     if (req.file) {
         // req.file.path のバックスラッシュをスラッシュに置換する
@@ -101,7 +105,7 @@ router.post("/expenses",upload.single("photo"),async(req,res)=>{//singleで一�
         //gはグローバル(文字列全体を検索して見つかったものを全て置き換える)、これがないと最初に見つかったやつだけ変わる
     }
 
-    await createExpense(req.session.userId,{amount,photo_path,description,expense_date,meal_type});
+    await createExpense(req.session.userId,{amount,photo_path,description,expense_date,meal_type,nomikai});
     res.status(200).send("Expense added")
 })
 
@@ -146,6 +150,7 @@ router.put("/expenses/:id",upload.single("photo"),async(req,res)=>{//:id=params
             description:req.body.description,
             expense_date:req.body.expense_date,
             meal_type:req.body.meal_type,
+            nomikai:req.body.nomikai,
             photo_path:new_photo
         };
         await updateExpenseById(expenseId,updatedData);
@@ -237,21 +242,53 @@ router.get("/expenses/:expenseId/comments",async(req,res)=>{
     }
 })
 
-router.post("/expenses/:expenseId/comments",async(req,res)=>{
+router.post("/expenses/:expenseId/comments",upload.single("photo"),async(req,res)=>{
     if(!req.session.userId){
         return res.status(401).send("Unauthorized");
     }
     try{
+        const content=req.body.content;
+        if((!content||!content.trim())&& !req.file){
+            return res.status(400).send("コメントか写真のどちらかを入力してください");
+        }
+        let photo_path = null; // photo_pathをnullで初期化
+        if (req.file) {
+        // req.file.path のバックスラッシュをスラッシュに置換する
+        photo_path = req.file.path.replace(/\\/g, "/");
+        }
         const commentData={
             expenseId:req.params.expenseId,
             authorId:req.session.userId,
             authorRole:req.session.role,
-            content:req.body.content
+            content:req.body.content,
+            photo_path:photo_path
         }
         await createComment(commentData);
         res.status(201).send("Comment created");
     }catch(error){
         console.error("コメントの投稿中にエラー:",error);
+        res.status(500).send("Server error");
+    }
+})
+
+router.delete("/comments/:id",async(req,res)=>{//特定のコメントを消したいのでid
+    if(!req.session.userId){
+        return res.status(401).send("Unauthorized");
+    }
+    try{
+        const commentId=req.params.id;
+        //コメントの情報を取得して、投稿者か管理者かを確認
+        const comment=await getCommentById(commentId);
+        if(!comment){
+            return res.status(404).send("Comment not found");
+        }
+        if(comment.authorId!==req.session.userId){//自分が書いたコメントじゃなかったら
+            return res.status(403).send("Forbidden");
+        }
+        await deleteCommentById(commentId);
+        res.status(200).send("Comment deleted");
+    }catch(error){
+        console.error("コメントの削除中にエラー:",error);
         res.status(500).send("Server error");
     }
 })

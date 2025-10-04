@@ -7,12 +7,14 @@ import API_BASE_URL from './config.js';
 
 function App() {
   //ログイン認証のステート
-  const [isLoggedIn,setIsLoggedIn]=useState(false);
   //ログイン状態か表すステート
   const[isLoading,setIsLoading]=useState(true);
-  const[role,setRole]=useState(null);
   const[view,setView]=useState("home");//表示画面切り替え(home or admin)
-  
+  const[session,setSession]=useState({
+    isLoggedIn:false,//最初はログインしていない
+    role:null,
+    userId:null
+  });
 //画面更新などが合ってもログインを継続する
 // (これがないといちいち打ち込んでログインしないといけない)
   useEffect(()=>{
@@ -22,16 +24,25 @@ function App() {
       });
 //routes.jsでセッション中だったらtrue,そうでなければfalseが帰ってくる
       const data=await response.json();
-      setIsLoggedIn(data.isLoggedIn);//ここのtrueかfalseかに従って画面が切り替わる
-      setRole(data.role);
+      //data={isLoggedIn:true,role:"admin",userId:1}みたいな感じ
+      setSession({
+        isLoggedIn:data.isLoggedIn,
+        role:data.role,
+        userId:data.userId
+      });
       setIsLoading(false);
     };
     checkLoginStatus();
   },[]);//空の配列を指定して最初のマウント時(初めて画面が出力される瞬間)に一度実行されるようになる
 
   const handleLogin=async(user)=>{
-    setIsLoggedIn(true);
-    setRole(user.role)
+    //user={id:1,username:"xxx",role:"admin"}みたいな感じ
+    setSession({
+      isLoggedIn:true,
+      role:user.role,
+      userId:user.id//user 
+    });
+    setView("home");//ログインしたらホーム画面に飛ぶ
   };
 
   const handleLogout=async()=>{
@@ -40,8 +51,11 @@ function App() {
       credentials: 'include'
     });
     if(response.ok){
-      setIsLoggedIn(false); 
-      setRole(null);
+      setSession({
+        isLoggedIn:false,
+        role:null,
+        userId:null
+      });
       setView("home");
     }
   };
@@ -53,7 +67,7 @@ function App() {
 		<div>
 			{/* ログイン状態に応じてコンポーネントを切り替え */}
   
-			{isLoggedIn ? (//isLoggedIn=trueならログイン中
+			{session.isLoggedIn ? (//isLoggedIn=trueならログイン中
 				// ログイン中
 				<div>
           <nav style={{
@@ -63,14 +77,14 @@ function App() {
             padding:"1rem",
             borderBottom:"1px solid #ccc"}}>
             <button onClick={()=>setView("home")}>ホーム</button>
-            {role==="admin"&& (
+            {session.role==="admin"&& (
               <button onClick={()=>setView("admin")}>管理者ページ</button>
             )}
             <button onClick={handleLogout}>ログアウト</button>
           </nav>
 
-          {view==="home" && <HomePage/>}
-          {view==="admin" && role === "admin"&&<AdminPage/>}
+          {view==="home" && <HomePage session={session}/>}
+          {view==="admin" && session.role === "admin"&&<AdminPage session={session}/>}
         </div>
 			) : (
 				// 非ログイン時はLoginPageを表示

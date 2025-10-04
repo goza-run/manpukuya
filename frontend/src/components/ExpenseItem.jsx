@@ -4,7 +4,8 @@ const mealTypeMap={
 	breakfast:"朝ごはん",
 	lunch:"昼ごはん",
 	dinner:"夜ごはん",
-	other:"その他"//データ上記録されているものをもう一度日本語に変える
+	other:"その他",
+	nomikai:"飲み会"
 }
 function ExpenseItem({ expense, onDelete,onEdit,onOpenComments }) {//onDelete=onDeleteExpense(expense.id)
 	const date=new Date(expense.expense_date);//2025-09-17をdateオブジェクトへ変換
@@ -15,8 +16,16 @@ function ExpenseItem({ expense, onDelete,onEdit,onOpenComments }) {//onDelete=on
 			<div className="expense-item-header">
 				<strong>{displayDate}<br></br>({mealTypeText})</strong>
 				<br></br>
-				<span>{expense.amount}円</span>
+				<span>食費：{expense.amount}円</span>
 			</div>
+			{expense.meal_type==="nomikai"&&expense.nomikai>0?(
+				<div>飲み会費用：{expense.nomikai}円</div>
+			):null
+			}
+			{/*
+			nomikaiがtrueなら飲み会費用を表示、false(0)なら表示しない
+			*/}
+			{/* 画像があれば表示 */}
 			{expense.photo_path&&(
 //expense.photo_path=trueであれば以下を実行
 				<img

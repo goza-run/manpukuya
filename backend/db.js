@@ -1,6 +1,7 @@
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
-const bcrypt =require("bcrypt")
+const bcrypt =require("bcrypt");
+const { get } = require('./routes');
 
 const isProduction = process.env.NODE_ENV === 'production';
 const dbPath = isProduction ? '/data/db.sqlite' : './db.sqlite';
@@ -53,6 +54,7 @@ async function initializeDatabase() {
             description TEXT,
             expense_date TEXT NOT NULL,
             meal_type TEXT NOT NULL,
+            nomikai INTEGER,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
         )
@@ -69,11 +71,12 @@ async function initializeDatabase() {
         `);
     await db.exec(`
         CREATE TABLE IF NOT EXISTS comments(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,--コメント一つ一つにidをつける
             expenseID INTEGER NOT NULL,--どの投稿？
             authorId INTEGER NOT NULL,--誰が書いた？
             authorRole TEXT NOT NULL,--投稿者が管理者かユーザーか
-            content TEXT NOT NULL,--コメント内容
+            content TEXT,--コメント内容
+            photo_path TEXT,--画像
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (expenseId) REFERENCES expenses(id) ON DELETE CASCADE,
             FOREIGN KEY (authorId) REFERENCES users(id) ON DELETE CASCADE
@@ -158,11 +161,11 @@ async function authenticateUser(username, password) {
  * @param {number} userId
  * @param {object} expenseData - { amount, photo_path, description}
  */
-async function createExpense(userId, { amount, photo_path, description,expense_date,meal_type}) {
+async function createExpense(userId, { amount, photo_path, description,expense_date,meal_type,nomikai}) {
     const db = await dbPromise;
     await db.run(
-        'INSERT INTO expenses (userId,amount,photo_path,description,expense_date,meal_type) VALUES (?, ?, ?, ?, ?, ?)',
-        [userId, amount, photo_path, description,expense_date,meal_type]
+        'INSERT INTO expenses (userId,amount,photo_path,description,expense_date,meal_type,nomikai) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [userId, amount, photo_path, description,expense_date,meal_type,nomikai]
     );
 }
 
@@ -190,13 +193,13 @@ async function deleteExpenseById(id) {
 }
 
 //食事記録をIDで更新
-async function updateExpenseById(id,{amount,description,expense_date,meal_type,photo_path}){
+async function updateExpenseById(id,{amount,description,expense_date,meal_type,photo_path,nomikai}){
     const db=await dbPromise;
     await db.run(
         `UPDATE expenses
-        SET amount=?,description=?,expense_date=?,meal_type=?,photo_path=?
+        SET amount=?,description=?,expense_date=?,meal_type=?,photo_path=?,nomikai=?
         WHERE id =?`,
-        [amount,description,expense_date,meal_type,photo_path,id]
+        [amount,description,expense_date,meal_type,photo_path,nomikai,id]
     );
 }
 //特定の月の目標金額を取得
@@ -214,7 +217,10 @@ async function setBudget(userId,month,amount){
     );
 }
 // --- コメント関連の関数 ---
-
+async function getCommentById(Id){
+    const db=await dbPromise;
+    return db.get(`SELECT*FROM comments WHERE id=?`,[Id]);
+}
 async function getCommentByExpenseId(expenseId){
     const db=await dbPromise;
     return db.all(`
@@ -227,12 +233,16 @@ async function getCommentByExpenseId(expenseId){
         ,[expenseId]);
 }
 
-async function createComment({expenseId,authorId,authorRole,content}) {
+async function createComment({expenseId,authorId,authorRole,photo_path,content}) {
     const db=await dbPromise;
     await db.run(
-        `INSERT INTO comments (expenseId,authorId,authorRole,content) VALUES (?,?,?,?)`,
-        [expenseId,authorId,authorRole,content]
+        `INSERT INTO comments (expenseId,authorId,authorRole,photo_path,content) VALUES (?,?,?,?,?)`,
+        [expenseId,authorId,authorRole,photo_path,content]
     );
+}
+async function deleteCommentById(id) {
+    const db = await dbPromise;
+    await db.run('DELETE FROM comments WHERE id = ?', [id]);
 }
 // モジュールとして必要な関数をエクスポート
 module.exports = {
@@ -246,6 +256,8 @@ module.exports = {
     updateExpenseById,
     getBudget,
     setBudget,
+    getCommentById,
     getCommentByExpenseId,
-    createComment
+    createComment,
+    deleteCommentById,
 };
