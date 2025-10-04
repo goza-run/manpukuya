@@ -31,9 +31,17 @@ const allowedOrigins = [
 
 // corsミドルウェアを設定
 app.use(cors({
-    origin: allowedOrigins, // ← 特定のオリジンからのリクエストを許可
+    origin: function (origin, callback) {
+        // `allowedOrigins`にリクエスト元のオリジンが含まれていれば許可
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true    // ← クッキー（セッション情報）の送受信を許可
 }));
+
 
 // URLエンコードのミドルウェアを設定
 app.use(express.urlencoded({ extended: false }));

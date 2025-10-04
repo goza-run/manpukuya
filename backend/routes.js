@@ -100,9 +100,10 @@ router.post("/expenses",upload.single("photo"),async(req,res)=>{//singleで一�
     let photo_path = null; // photo_pathをnullで初期化
     if (req.file) {
         // req.file.path のバックスラッシュをスラッシュに置換する
-        photo_path = req.file.path.replace(/\\/g, "/");
+        const internalPath = req.file.path.replace(/\\/g, "/");
         //replaceの後は正規表現、\\2個になっているが、これで\を探してきなさいという意味になり、
         //gはグローバル(文字列全体を検索して見つかったものを全て置き換える)、これがないと最初に見つかったやつだけ変わる
+        photo_path = internalPath.substring(internalPath.indexOf("uploads/"));
     }
 
     await createExpense(req.session.userId,{amount,photo_path,description,expense_date,meal_type,nomikai});
@@ -131,7 +132,8 @@ router.put("/expenses/:id",upload.single("photo"),async(req,res)=>{//:id=params
         }
         let new_photo=originalExpense.photo_path;//デフォルトは元の写真
         if(req.file){
-            new_photo=req.file.path.replace(/\\/g,"/");
+            const internalPath=req.file.path.replace(/\\/g,"/");
+            new_photo=internalPath.substring(internalPath.indexOf("uploads/"));
             //元の写真があった場合
             if(originalExpense.photo_path){
                 const oldPath = path.resolve(originalExpense.photo_path);
@@ -254,7 +256,8 @@ router.post("/expenses/:expenseId/comments",upload.single("photo"),async(req,res
         let photo_path = null; // photo_pathをnullで初期化
         if (req.file) {
         // req.file.path のバックスラッシュをスラッシュに置換する
-        photo_path = req.file.path.replace(/\\/g, "/");
+        const internalPath = req.file.path.replace(/\\/g, "/");
+        photo_path = internalPath.substring(internalPath.indexOf("uploads/"));
         }
         const commentData={
             expenseId:req.params.expenseId,
