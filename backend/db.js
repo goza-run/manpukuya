@@ -244,6 +244,17 @@ async function deleteCommentById(id) {
     const db = await dbPromise;
     await db.run('DELETE FROM comments WHERE id = ?', [id]);
 }
+//お供決め
+async function updateUserCharacter(userId,character){
+    const db=await dbPromise;
+    await db.run(
+        `UPDATE users
+        SET selected_character=?
+        WHERE id =?`,
+        [character,userId]
+    );
+}
+
 // モジュールとして必要な関数をエクスポート
 module.exports = {
     getAllUsers,
@@ -260,4 +271,5 @@ module.exports = {
     getCommentByExpenseId,
     createComment,
     deleteCommentById,
+    updateUserCharacter,
 };

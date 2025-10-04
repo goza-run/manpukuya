@@ -17,7 +17,8 @@ const{
     getCommentById,
     getCommentByExpenseId,
     createComment,
-    deleteCommentById
+    deleteCommentById,
+    updateUserCharacter,
 }=require("./db");
 const e = require('express');
 const router =express.Router();
@@ -48,10 +49,12 @@ router.post("/login",async(req,res)=>{
         req.session.userId=user.id;//userIdを保存
         req.session.username=user.username;
         req.session.role=user.role;//adminかuserかを記録
+        req.session.selected_character=user.selected_character;//お供の情報をセッションに保存
         res.status(200).json({//フロントエンドに送る情報
             id:user.id,
             username:user.username,
-            role:user.role
+            role:user.role,
+            selected_character:user.selected_character
         });
     }else{
         res.status(401).send("Invalid credentials");
@@ -75,8 +78,9 @@ router.get("/session",(req,res)=>{
             isLoggedIn:true,
             username:req.session.username,
             role:req.session.role,
-            userId:req.session.userId
+            userId:req.session.userId,
             //上のauthenticateUserからusernameは受け取っている
+            selected_character:req.session.selected_character
         });
     }else{
         res.status(200).json({isLoggedIn:false});
@@ -295,6 +299,30 @@ router.delete("/comments/:id",async(req,res)=>{//特定のコメントを消し�
         res.status(500).send("Server error");
     }
 })
+
+//お供決め
+router.post("/user/character",async(req,res)=>{
+    if(!req.session.userId){
+        return res.status(401).send("Unauthorized");
+    }
+    const {character}=req.body;
+    if(!character||typeof character!=="string"){//characterのtypeがstringじゃなかったら
+    //ダメな例
+    //{character:123} {character:[]}
+        return res.status(400).send("Invalid character");
+    }
+    try{
+        await updateUserCharacter(req.session.userId,character);
+        req.session.selected_character=character;//セッション情報も更新
+        res.status(200).json({
+            message:"Character updated",
+            selected_character:character
+        });
+    }catch(error){
+        console.error("お供決め中にエラー:",error);
+        res.status(500).send("Server error");
+    }
+});
 module.exports=router;
 /*req.fileの中身について
 {
