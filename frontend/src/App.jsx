@@ -47,25 +47,25 @@ function App() {
 
         const favicon=document.getElementById("favicon");
         if(favicon){
-            favicon.href=`/${characterId}.png`;
+            favicon.href=characterInfo.imageUrl;
         }
         const appleIcon=document.getElementById("apple-touch-icon");
         if(appleIcon){
-            appleIcon.href=`/${characterId}.png`;
+            appleIcon.href=characterInfo.imageUrl;
         }
         const manifestLink=document.getElementById("manifest");
         if(manifestLink){
             const manifestData={
-                "name":"満伏屋 with ${characterName}",
+                "name":`満伏屋 with ${characterName}`,
                 "short_name":characterName,
                 "icons":[
                     {
-                        "src":`/${characterId}.png`,
+                        "src":characterInfo.imageUrl,
                         "sizes":"192x192",
                         "type":"image/png"
                     },
                     {
-                        "src":`/${characterId}.png`,
+                        "src":characterInfo.imageUrl,
                         "sizes":"512x512",
                         "type":"image/png"
                     }
@@ -85,7 +85,8 @@ function App() {
     setSession({
       isLoggedIn:true,
       role:user.role,
-      userId:user.id//user 
+      userId:user.id,//user
+      selected_character:user.selected_character 
     });
     setView("home");//ログインしたらホーム画面に飛ぶ
   };
