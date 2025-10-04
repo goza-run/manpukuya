@@ -25,7 +25,8 @@ app.set('trust proxy', 1);
 // 許可するオリジン（アクセス元）のリストを作成
 const allowedOrigins = [
     'https://manpukuya.vercel.app', // あなたのVercelのURL
-    'http://localhost:5173'      // ローカル開発用のURL
+    'http://localhost:5173',      // ローカル開発用のURL
+    'https://app.manpukuya.me'
 ];
 
 // corsミドルウェアを設定

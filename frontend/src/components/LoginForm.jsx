@@ -14,8 +14,8 @@ function LoginForm({ onLogin }) {
 			method: 'POST', // POSTリクエスト
 			headers: {
 				'Content-Type': 'application/json', // タイプをJSONに設定 
-			credentials: 'include'
 			},
+			credentials: 'include',
 			// ユーザー名とパスワードを設定
 			body: JSON.stringify({ username,password}),
 		});
