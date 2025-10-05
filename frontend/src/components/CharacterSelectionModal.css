@@ -1,6 +1,7 @@
 .character-grid {
     display: flex;
-    justify-content: space-around;
+    flex-wrap: wrap;/*折り返し*/
+    justify-content: center;
     gap: 1rem;
     padding: 1rem;
 }
