@@ -121,3 +121,31 @@ button.comment:hover{
 	border-radius: 4px;
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+
+.ma-status-container{
+	background-color: #f9f9f9;
+	border: 1px solid #eee;
+	border-radius: 8px;
+	padding: 0.5rem 1rem;
+	margin: 1rem 0;
+}
+
+.ma-status-container p{
+	margin: 0.5rem 0;
+	font-size: 1.1rem;
+}
+
+.ma-value{
+	font-weight: bold;
+	font-size: 1.2rem;
+}
+.ma-value-good{
+	color:blue;
+	font-weight: bold;
+	font-size: 1.2rem;
+}
+.ma-value-bad{
+	color:red;
+	font-weight: bold;
+	font-size: 1.2rem;
+}

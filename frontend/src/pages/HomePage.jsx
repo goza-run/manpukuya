@@ -14,7 +14,7 @@ function HomePage({ onLogout,session,onCharacterSelect }) {
 	// 食費データの配列を管理するステートを定義
 	const [expenses, setExpense] = useState([]);
 	const[budget,setBudget]=useState(null);
-	const [currentMonth,setCurrentMonth]=useState(new Date().toISOString().substring(0, 7))
+	const [currentMonth,setCurrentMonth]=useState(new Date().toISOString().substring(0, 7))//今月の年月を取得(2025-09みたいな感じ)
 	const[isEditModal,setIsEditModal]=useState(false);//モーダル=ちっちゃいウィンドウ
 	const[editing,setIsEditing]=useState(null);
 	const[commenting,setIsCommenting]=useState(null);
@@ -82,7 +82,6 @@ function HomePage({ onLogout,session,onCharacterSelect }) {
 		}
 	};
 	//食事データを編集
-	
 	const handleUpdateExpense=async (id,formData)=>{
 		const response=await fetch(`${API_BASE_URL}/api/expenses/${id}`,{
 			method:"PUT",
@@ -113,6 +112,33 @@ function HomePage({ onLogout,session,onCharacterSelect }) {
 		//{"2025-09":[食事内容],"2025-08":[食事内容]}
 		return acc;
 	},{});//初期値は空のオブジェクト
+	
+	//ma計算
+	let idealMa=0;
+	let actualMa=0;
+
+	const today=new Date();
+	const year=today.getFullYear();
+	const getmonth=today.getMonth()+1;//0が1月なので+1する
+	const daysInMonth=new Date(year,getmonth,0).getDate();//その月の日数を取得
+	const currrentDay=today.getDate();//今日の日にちを取得
+
+	if(budget){
+		const dailyBudget=budget.amount/daysInMonth;//1日あたりの予算
+		idealMa=(dailyBudget/600).toFixed(2);//小数点第2位まで表示
+	}
+
+	const monthlyExpenses=groupedExpenses[currentMonth]||[];//今月のデータだけ取り出す
+	const expensesUnitToday=monthlyExpenses.filter(expense=>{
+		const expenseDate=new Date(expense.expense_date);
+		return expenseDate.getDate()<=currrentDay//今日の日にちよりも小さいものだけ取り出す
+	});//今日までのデータだけ取り出す
+	const totalExpenseToday=expensesUnitToday.reduce((sum,expense)=>sum+expense.amount,0);
+	
+	if(totalExpenseToday>0&&currrentDay>0){
+		const dailyActualExpense=totalExpenseToday/currrentDay;//今日までの1日あたりの食費
+		actualMa=(dailyActualExpense/600).toFixed(2);
+	}
 
 	//月の並び替え(調整しないと辞書順で昔の日にちが上になるので逆にする)
 	const sortedMonths=Object.keys(groupedExpenses).sort((a,b)=>b.localeCompare(a));
@@ -154,6 +180,13 @@ function HomePage({ onLogout,session,onCharacterSelect }) {
 			
 			<h3>{currentMonth}月の目標金額</h3>
 			<Budget budget={budget} onSetBudget={handleSetBudget}/>
+			<div className="ma-status-container">
+				<p>理想のma/day：<span className="ma-value">{idealMa} ma/day</span></p>
+				<p>今日までの実際のma/day：<span className={actualMa>idealMa?"ma-value-bad":"ma-value-good"}>
+					{actualMa} ma/day
+					</span>
+				</p>
+			</div>
 			<h3>食事を記録してね</h3>
 			<ExpenseForm onAddExpense={handleAddExpense} />
 			<hr />

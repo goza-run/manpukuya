@@ -1,6 +1,6 @@
 .character-grid {
     display: flex;
-    flex-wrap: wrap;/*折り返し*/
+    flex-wrap: wrap;/*モーダル画面がはみ出ないように自動改行*/
     justify-content: center;
     gap: 1rem;
     padding: 1rem;
