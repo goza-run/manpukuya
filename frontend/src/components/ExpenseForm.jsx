@@ -71,7 +71,7 @@ function ExpenseForm({onAddExpense}){//onAddExpense=handleAddExpense
         setDescription("");
         setExpenseDate(getTodayString());
         setMealType("breakfast");
-        setNomikai("0")
+        setNomikai(0)
         e.target.reset();
     };
     return(//必須項目だけrequiredとしている
