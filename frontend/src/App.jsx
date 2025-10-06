@@ -4,6 +4,8 @@ import LoginPage from "./pages/LoginPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import AdminPage from './pages/AdminPage.jsx';
 import API_BASE_URL from './config.js';
+import NotificationIcon from './components/NotificationIcon.jsx';
+import NotificationList from './components/NotificationList.jsx';
 import { defaultCharacter } from './characters.js';
 import { characters } from './characters.js';
 
@@ -12,6 +14,10 @@ function App() {
   //ログイン状態か表すステート
   const[isLoading,setIsLoading]=useState(true);
   const[view,setView]=useState("home");//表示画面切り替え(home or admin)
+  const[notifications,setNotifications]=useState([]);//通知の配列
+  const[isNotificationOpen,setIsNotificationOpen]=useState(false);//通知リストが開いているかどうか
+  const notificationIconRef=React.useRef(null);
+  const notificaitionListRef=React.useRef(null);
   const[session,setSession]=useState({
     isLoggedIn:false,//最初はログインしていない
     role:null,
@@ -37,8 +43,66 @@ function App() {
     };
     checkLoginStatus();
   },[]);//空の配列を指定して最初のマウント時(初めて画面が出力される瞬間)に一度実行されるようになる
+  //通知を取得する
+  useEffect(()=>{
+    if(session.isLoggedIn){
+      const fetchNotifications=async()=>{
+        const response=await fetch(`${API_BASE_URL}/api/notifications`,{
+          credentials: 'include'
+        });
+        if(response.ok){
+          const data=await response.json();
+          setNotifications(data);
+        }
+      };
+      if(session.isLoggedIn){
+        fetchNotifications();
 
-  //sessionが変わるたびにアイコンを更新
+        const intervalId=setInterval(fetchNotifications,15000);//15秒ごとに通知を取得
+        return()=>clearInterval(intervalId);//クリーンアップ関数、ログアウト時やコンポーネントが不要になったときにintervalをクリアする
+      };
+    }else{
+      setNotifications([]);//ログアウトしたら通知を空にする
+    }
+  },[session.isLoggedIn]);//ログイン状態が変わるたびに実行
+  //通知リストを開いたときに既読にする
+  const handleNotificationIconClick=async()=>{
+    const currentlyOpen=!isNotificationOpen;
+    setIsNotificationOpen(currentlyOpen);
+    if(currentlyOpen&&unreadCount>0){
+      const updateNotifications=notifications.map(n=>({
+        ...n,
+        is_read:true
+      }));
+      setNotifications(updateNotifications);
+      //バックエンドにも更新を送る
+      await fetch(`${API_BASE_URL}/api/notifications/read`,{
+        method:"POST",
+        credentials: 'include'
+      });
+    }
+  };
+  //外側クリックで閉じる
+  useEffect(()=>{
+    const handleClickOutside=(event)=>{
+      if(
+        notificationIconRef.current&&!notificationIconRef.current.contains(event.target)&&
+        notificaitionListRef.current&&
+        !notificaitionListRef.current.contains(event.target)
+      ){
+        setIsNotificationOpen(false); 
+      }
+    }
+    if(isNotificationOpen){
+      document.addEventListener("mousedown",handleClickOutside);
+    }
+    return()=>{
+      document.removeEventListener("mousedown",handleClickOutside);
+    }
+  },[isNotificationOpen]);  
+
+  
+  //sessionが変わるたびにアイコンを変える
    useEffect(() => {
     if (session.isLoggedIn && session.selected_character) {
         const characterId = session.selected_character;
@@ -47,7 +111,7 @@ function App() {
 
         const favicon=document.getElementById("favicon");
         if(favicon){
-            favicon.href=characterInfo.imageUrl;
+            favicon.href=characterInfo.imageUrl;//index.htmlのfaviconを書き換える
         }
         const appleIcon=document.getElementById("apple-touch-icon");
         if(appleIcon){
@@ -103,15 +167,16 @@ function App() {
         userId:null
       });
       setView("home");
+      setIsNotificationOpen(false);//通知リストを閉じる
     }
   };
   const handleCharacterSelect=async(newCharacter)=>{
     setSession(prevSession=>({
-      ...prevSession,
-      selected_character:newCharacter
+      ...prevSession,//sessionの他の情報をそのままコピー
+      selected_character:newCharacter//selected_characterだけ新しい値に更新
     }));
   };
-
+  const unreadCount=notifications.filter(n=>!n.is_read).length;
     //バックエンドにも更新を送る
   if(isLoading){//上のuseEffectが機能していれば必ずfalseになる
     return<div>Loading...</div>
@@ -133,11 +198,25 @@ function App() {
             {session.role==="admin"&& (
               <button onClick={()=>setView("admin")}>管理者ページ</button>
             )}
-            <button onClick={handleLogout}>ログアウト</button>
+            <div style={{display:"flex",alignItems:"center"}}>
+              <div ref={notificationIconRef}>
+                <NotificationIcon
+                  unreadCount={unreadCount}
+                  onClick={handleNotificationIconClick} 
+                />
+            </div>
+            <button onClick={handleLogout} style={{marginLeft:"1rem"}}>ログアウト</button>
+            </div>
           </nav>
-
           {view==="home" && <HomePage session={session} onCharacterSelect={handleCharacterSelect}/>}
           {view==="admin" && session.role === "admin"&&<AdminPage session={session}/>}
+          {isNotificationOpen && (
+            <div ref={notificaitionListRef}>
+              <NotificationList 
+                notifications={notifications}
+              />
+            </div>
+          )}
         </div>
 			) : (
 				// 非ログイン時はLoginPageを表示

@@ -5,6 +5,7 @@ const path=require("path");
 const multer=require("multer");
 const{
     getAllUsers,
+    getAdminUsers,
     createUser,
     authenticateUser,
     createExpense,
@@ -18,6 +19,9 @@ const{
     getCommentByExpenseId,
     createComment,
     deleteCommentById,
+    createNotification,
+    getNotificationsByUserId,
+    markNotificationAsRead,
     updateUserCharacter,
 }=require("./db");
 const e = require('express');
@@ -271,6 +275,33 @@ router.post("/expenses/:expenseId/comments",upload.single("photo"),async(req,res
             photo_path:photo_path
         }
         await createComment(commentData);
+        //notificationstableに追加
+        const expense=await getExpenseById(req.params.expenseId);
+        //expenseIdから投稿者のIdを取得
+        const postOwnerId=expense.userId;
+        if(postOwnerId!==req.session.userId){
+            //自分以外がコメントした場合のみ通知を作成
+            await createNotification({
+                recipientId:postOwnerId,
+                senderId:req.session.userId,
+                senderName:req.session.username,
+                type:"comment",
+                expenseId:req.params.expenseId
+            });
+        }
+        const admins=await getAdminUsers();
+        for(const admin of admins){
+            if(admin.id!==req.session.userId&&admin.id!==postOwnerId){
+                //自分と投稿者以外の管理者全員に通知を送る
+                await createNotification({
+                    recipientId:admin.id,
+                    senderId:req.session.userId,
+                    senderName:req.session.username,
+                    type:"comment_admin",
+                    expenseId:req.params.expenseId
+                });
+            }
+        }
         res.status(201).send("Comment created");
     }catch(error){
         console.error("コメントの投稿中にエラー:",error);
@@ -299,6 +330,33 @@ router.delete("/comments/:id",async(req,res)=>{//特定のコメントを消し�
         res.status(500).send("Server error");
     }
 })
+//自分宛の通知を取得
+router.get("/notifications",async(req,res)=>{
+    if(!req.session.userId){
+        return res.status(401).send("Unauthorized");
+    }
+    try{
+        const notifications=await getNotificationsByUserId(req.session.userId);
+        res.status(200).json(notifications);
+    }catch(error){
+        console.error("通知の取得中にエラー:",error);
+        res.status(500).send("Server error");
+    }
+});
+
+//通知を既読にする
+router.post("/notifications/read",async(req,res)=>{
+    if(!req.session.userId){
+        return res.status(401).send("Unauthorized");
+    }
+    try{
+        await markNotificationAsRead(req.session.userId);
+        res.status(200).send("Notifications marked as read");
+    }catch(error){
+        console.error("通知の既読処理中にエラー:",error);
+        res.status(500).send("Server error");
+    }
+});
 
 //お供決め
 router.post("/user/character",async(req,res)=>{

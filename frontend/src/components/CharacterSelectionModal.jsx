@@ -9,7 +9,7 @@ const characters = [
     { id: 'char3', name: 'AYA', imageUrl: '/AYA.png' },
 ];
 
-function CharacterSelectionModal({onClose,onCharacterSelect}){
+function CharacterSelectionModal({onClose,onCharacterSelect}){//onCharacterSelect=handleCharacterSelect(App.jsx)
     const handleSelect=async(characterId)=>{
         //選んだキャラクターをサーバーに送信してDBに保存
         const response=await fetch(`${API_BASE_URL}/api/user/character`,{

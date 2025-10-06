@@ -1,0 +1,37 @@
+/* src/components/NotificationList.css */
+.notification-list-container {
+    position: absolute;
+    top: 60px; /* ナビゲーションバーの高さに合わせて調整 */
+    right: 20px;
+    width: 350px;
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    color: #333; /* 文字色を黒に */
+}
+
+.notification-item {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item.unread {
+    background-color: #eaf2ff; /* 未読の背景色 */
+}
+
+.notification-item p {
+    margin: 0 0 0.25rem 0;
+}
+
+.notification-time {
+    font-size: 0.8rem;
+    color: #888;
+}

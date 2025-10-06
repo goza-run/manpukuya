@@ -1,7 +1,6 @@
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const bcrypt =require("bcrypt");
-const { get } = require('./routes');
 
 const isProduction = process.env.NODE_ENV === 'production';
 const dbPath = isProduction ? '/data/db.sqlite' : './db.sqlite';
@@ -117,6 +116,11 @@ async function getAllUsers(){
     return db.all(`SELECT id, username, role FROM users`);
 }
 
+//管理者だけ取得
+async function getAdminUsers(){
+    const db=await dbPromise;
+    return db.all(`SELECT id, username FROM users WHERE role="admin"`);
+}
 // --- ユーザー関連の関数 ---
 
 /**
@@ -244,6 +248,31 @@ async function deleteCommentById(id) {
     const db = await dbPromise;
     await db.run('DELETE FROM comments WHERE id = ?', [id]);
 }
+//コメント通知
+async function createNotification({recipientId,senderId,senderName,type,expenseId}){
+    const db=await dbPromise;
+    await db.run(
+        `INSERT INTO notifications (recipientId,senderId,senderName,type,expenseId) VALUES (?,?,?,?,?)`,
+        [recipientId,senderId,senderName,type,expenseId]
+    );
+}
+
+async function getNotificationsByUserId(userId){
+    const db=await dbPromise;
+    return db.all(`SELECT * FROM notifications WHERE recipientId=? ORDER BY created_at DESC`,[userId]);
+}
+
+async function markNotificationAsRead(userId){
+    const db=await dbPromise;
+    const result=await db.run(`UPDATE notifications SET is_read=? WHERE recipientId=? AND is_read=?`,[1,userId,0]);
+    // --- デバッグ用のログ ---
+    /*console.log('--- Mark as Read Debug ---');
+    console.log('Updating notifications for User ID:', userId);
+    console.log('Rows updated:', result.changes); // 更新された行数を表示
+    console.log('--------------------------');
+    */
+}
+
 //お供決め
 async function updateUserCharacter(userId,character){
     const db=await dbPromise;
@@ -255,9 +284,12 @@ async function updateUserCharacter(userId,character){
     );
 }
 
+
+
 // モジュールとして必要な関数をエクスポート
 module.exports = {
     getAllUsers,
+    getAdminUsers,
     createUser,
     authenticateUser,
     createExpense,
@@ -271,5 +303,8 @@ module.exports = {
     getCommentByExpenseId,
     createComment,
     deleteCommentById,
+    createNotification,
+    getNotificationsByUserId,
+    markNotificationAsRead,
     updateUserCharacter,
 };
