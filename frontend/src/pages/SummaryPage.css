@@ -1,0 +1,26 @@
+/* src/pages/SummaryPage.css */
+
+.summary-container {
+    padding: 1rem;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.summary-table th,
+.summary-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.summary-table th {
+    background-color: #f2f2f2;
+}
+
+.summary-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}

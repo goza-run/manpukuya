@@ -15,6 +15,7 @@ const{
     updateExpenseById,
     getBudget,
     setBudget,
+    getMonthlySummarize,
     getCommentById,
     getCommentByExpenseId,
     createComment,
@@ -187,6 +188,22 @@ router.post("/budget",async(req,res)=>{
     const {month,amount}=req.body;
     await setBudget(req.session.userId,month,Number(amount));
     res.status(200).send("Budget set successfully");
+});
+
+//全ユーザーの食費・飲み会代を取得
+router.get("/summary/:month",async(req,res)=>{
+    if(!req.session.userId){
+        return res.status(401).send("Unauthorized");
+    }
+    try{
+        const {month}=req.params;
+        const summaries=await getMonthlySummarize(month);
+        res.json(summaries);
+        //summaries=[{username:xxx,foodTotal:xxxx,nomikaiTotal:xxxx},...]
+    }catch(error){
+        console.error("月次集計の取得中にエラー:",error);
+        res.status(500).send("Server error");
+    }
 });
 
 //管理者用

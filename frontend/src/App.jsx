@@ -6,6 +6,7 @@ import AdminPage from './pages/AdminPage.jsx';
 import API_BASE_URL from './config.js';
 import NotificationIcon from './components/NotificationIcon.jsx';
 import NotificationList from './components/NotificationList.jsx';
+import SummaryPage from './pages/SummaryPage.jsx';
 import { defaultCharacter } from './characters.js';
 import { characters } from './characters.js';
 
@@ -17,6 +18,7 @@ function App() {
   const[notifications,setNotifications]=useState([]);//通知の配列
   const[isNotificationOpen,setIsNotificationOpen]=useState(false);//通知リストが開いているかどうか
   const notificationIconRef=React.useRef(null);
+  //useRefはrefに入れることでdivなどのDOM要素を直接参照できるようになる
   const notificaitionListRef=React.useRef(null);
   const[session,setSession]=useState({
     isLoggedIn:false,//最初はログインしていない
@@ -68,8 +70,10 @@ function App() {
   //通知リストを開いたときに既読にする
   const handleNotificationIconClick=async()=>{
     const currentlyOpen=!isNotificationOpen;
-    setIsNotificationOpen(currentlyOpen);
-    if(currentlyOpen&&unreadCount>0){
+    setIsNotificationOpen(currentlyOpen);//これからどういう状態になるか
+    //もし開いたときに未読があったら既読にする
+    if(currentlyOpen&&unreadCount>0){//これから開く&&未読がある
+      //画面上では既読にする
       const updateNotifications=notifications.map(n=>({
         ...n,
         is_read:true
@@ -86,6 +90,21 @@ function App() {
   useEffect(()=>{
     const handleClickOutside=(event)=>{
       if(
+        /*notificationIconRef.currentで
+        <div ref={notificaitionListRef}>
+              <NotificationList 
+                notifications={notifications}
+              />
+        </div>
+        を引きずりだす、この画面が表示されててなおかつ
+        !notificationIconRef.current.contains(event.target)で
+        クリックされた場所がnotificationIconRef.current(ベル)の中じゃなかったら閉じる
+        さらに
+        notificaitionListRef.current&&
+        !notificaitionListRef.current.contains(event.target)
+        で通知リストの中でもなかったら閉じる
+        つまりベルでも通知リストでもなかったら閉じる
+        */
         notificationIconRef.current&&!notificationIconRef.current.contains(event.target)&&
         notificaitionListRef.current&&
         !notificaitionListRef.current.contains(event.target)
@@ -95,10 +114,13 @@ function App() {
     }
     if(isNotificationOpen){
       document.addEventListener("mousedown",handleClickOutside);
+    //addEventListener=次のイベントを追加する
+    //mousedown=クリックした瞬間に発火するイベント
     }
     return()=>{
       document.removeEventListener("mousedown",handleClickOutside);
     }
+    //removeEventListener=次のイベントを削除する
   },[isNotificationOpen]);  
 
   
@@ -193,8 +215,11 @@ function App() {
             justifyContent:"space-between",//両端に要素を配置
             alignItems:"center",//上下中央揃え
             padding:"1rem",
-            borderBottom:"1px solid #ccc"}}>
+            borderBottom:"1px solid #ccc",
+            flexWrap:"wrap"
+            }}>
             <button onClick={()=>setView("home")}>ホーム</button>
+            <button onClick={()=>setView("summary")}>みんなのごはん</button>
             {session.role==="admin"&& (
               <button onClick={()=>setView("admin")}>管理者ページ</button>
             )}
@@ -209,6 +234,7 @@ function App() {
             </div>
           </nav>
           {view==="home" && <HomePage session={session} onCharacterSelect={handleCharacterSelect}/>}
+          {view==="summary" && <SummaryPage/>}
           {view==="admin" && session.role === "admin"&&<AdminPage session={session}/>}
           {isNotificationOpen && (
             <div ref={notificaitionListRef}>

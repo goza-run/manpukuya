@@ -220,6 +220,22 @@ async function setBudget(userId,month,amount){
     [userId,month,amount]
     );
 }
+//全ユーザーの食費・飲み会代を取得
+async function getMonthlySummarize(month){
+    const db=await dbPromise;
+    return db.all(`
+        SELECT 
+            users.username,
+            SUM(expenses.amount) as foodTotal,
+            SUM(expenses.nomikai) as nomikaiTotal
+        FROM expenses
+        JOIN users ON expenses.userId = users.id
+        WHERE strftime('%Y-%m', expenses.expense_date)=?
+        GROUP BY users.id
+        `,[month]);
+}//WHERE strftime('%Y-%m', expenses.expense_date)でexpensesテーブルの
+// expense_dateから年-月を取り出してそれがもらったmonthと同じものだけを取り出す
+//GROUP BY users.idでユーザーごとにまとめる
 // --- コメント関連の関数 ---
 async function getCommentById(Id){
     const db=await dbPromise;
@@ -299,6 +315,7 @@ module.exports = {
     updateExpenseById,
     getBudget,
     setBudget,
+    getMonthlySummarize,
     getCommentById,
     getCommentByExpenseId,
     createComment,
