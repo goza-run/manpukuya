@@ -124,17 +124,17 @@ function App() {
                 "short_name":characterName,
                 "icons":[
                     {
-                        "src":characterInfo.imageUrl,
+                        "src":`${window.location.origin}${characterInfo.imageUrl}`,
                         "sizes":"192x192",
                         "type":"image/png"
                     },
                     {
-                        "src":characterInfo.imageUrl,
+                        "src":`${window.location.origin}${characterInfo.imageUrl}`,
                         "sizes":"512x512",
                         "type":"image/png"
                     }
                 ],
-                "start_url":".",
+                "start_url":"/",
                 "display":"standalone",
                 "theme_color":"#ffffff",
                 "background_color":"#ffffff"
