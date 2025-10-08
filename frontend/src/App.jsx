@@ -6,6 +6,8 @@ import AdminPage from './pages/AdminPage.jsx';
 import API_BASE_URL from './config.js';
 import NotificationIcon from './components/NotificationIcon.jsx';
 import NotificationList from './components/NotificationList.jsx';
+import HamburgerIcon from './components/HamburgerIcon.jsx';
+import MobileMenu from './components/MobileMenu.jsx';
 import SummaryPage from './pages/SummaryPage.jsx';
 import { defaultCharacter } from './characters.js';
 import { characters } from './characters.js';
@@ -20,6 +22,7 @@ function App() {
   const notificationIconRef=React.useRef(null);
   //useRefはrefに入れることでdivなどのDOM要素を直接参照できるようになる
   const notificaitionListRef=React.useRef(null);
+  const [isMobileMenuOpen,setIsMobileMenuOpen]=useState(false);
   const[session,setSession]=useState({
     isLoggedIn:false,//最初はログインしていない
     role:null,
@@ -216,23 +219,47 @@ function App() {
             alignItems:"center",//上下中央揃え
             padding:"1rem",
             borderBottom:"1px solid #ccc",
-            flexWrap:"wrap"
             }}>
-            <button onClick={()=>setView("home")}>ホーム</button>
-            <button onClick={()=>setView("summary")}>みんなのごはん</button>
-            {session.role==="admin"&& (
-              <button onClick={()=>setView("admin")}>管理者ページ</button>
+            {/*PC用のメニュー*/}
+            <div className="desktop-nav">
+              <button onClick={()=>setView("home")}>ホーム</button>
+              <button onClick={()=>setView("summary")}>みんなのごはん</button>
+              {session.role==="admin"&& (
+                <button onClick={()=>setView("admin")}>管理者ページ</button>
             )}
+            </div>
             <div style={{display:"flex",alignItems:"center"}}>
               <div ref={notificationIconRef}>
                 <NotificationIcon
                   unreadCount={unreadCount}
                   onClick={handleNotificationIconClick} 
                 />
-            </div>
-            <button onClick={handleLogout} style={{marginLeft:"1rem"}}>ログアウト</button>
+              </div>
+              <div className="desktop-nav">
+                <button onClick={handleLogout} style={{marginLeft:"1rem"}}>ログアウト</button>
+              </div>
+              <div className="mobile-nav">
+                <HamburgerIcon 
+                  onClick={()=>
+                    setIsMobileMenuOpen(!isMobileMenuOpen)
+                  }/>
+              </div>
             </div>
           </nav>
+            {/*スマホ用のメニュー*/}
+            {isMobileMenuOpen&&(
+              <MobileMenu 
+                session={session}
+                onViewChange={(view)=>{
+                  setView(view);
+                  setIsMobileMenuOpen(false);//メニューを閉じる
+                }}
+                onLogout={()=>{
+                  handleLogout();
+                  setIsMobileMenuOpen(false);//メニューを閉じる
+                }}
+              />
+            )}
           {view==="home" && <HomePage session={session} onCharacterSelect={handleCharacterSelect}/>}
           {view==="summary" && <SummaryPage/>}
           {view==="admin" && session.role === "admin"&&<AdminPage session={session}/>}

@@ -1,0 +1,25 @@
+.mobile-menu {
+    position: absolute;
+    top: 60px; /* ナビゲーションバーの高さに合わせて調整 */
+    right: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 2000;
+    width: 200px;
+}
+
+.mobile-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 1rem;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid #eee;
+    color: #333;
+}
+
+.mobile-menu button:hover {
+    background-color: #f9f9f9;
+}

@@ -149,3 +149,24 @@ button.comment:hover{
 	font-weight: bold;
 	font-size: 1.2rem;
 }
+
+/*スマホ版ではPC用を隠し、モバイル用を表示*/
+.desktop-nav{
+	display:none
+}
+.mobile-nav{
+	display:block
+}
+/*画面がおっきくなったらPC用を表示して、モバイル版を非表示にする*/
+
+/*@mediaはこれから条件を指定するという意味*/
+@media (min-width:768px){
+	.desktop-nav{
+		display:flex;
+		align-items:center;
+		gap:1rem;
+	}
+	.mobile-nav{
+		display: none;
+	}
+}
