@@ -4,10 +4,11 @@
  */
 exports.seed = async function(knex) {
   // Deletes ALL existing entries
-  await knex('user_unlocked_dialogues').del()
+  /*await knex('user_unlocked_dialogues').del()
   await knex('dialogues').del()
   await knex('user_unlocked_characters').del()
   await knex('characters').del()
+  */
   //最初だけ上やる
   // これがあるとseedrunした時に解放したものがリセットされてしまう
   
