@@ -184,7 +184,10 @@ async function getExpensesByUserId(userId) {
 
 async function getExpenseById(id){
     const db=await dbPromise;
-    return db.get(`SELECT*FROM expenses WHERE id=?`,[id]);
+    return db.get(`SELECT expenses.*,users.username
+        FROM expenses
+        JOIN users ON expenses.userId=users.id
+        WHERE expenses.id=?`,[id]);
 }
 
 /**
@@ -300,8 +303,79 @@ async function updateUserCharacter(userId,character){
     );
 }
 
+async function getUserById(id){
+    const db=await dbPromise;
+    return db.get(`SELECT * FROM users WHERE id =?`,[id])
+}
+//ガチャ
+async function updateUserGachaStats(userId,{points,streak,lastPostDate}){
+    const db=await dbPromise;
+    await db.run(
+        `UPDATE users SET points=?, login_streak=?,last_post_date=? WHERE id=?`,
+        [points,streak,lastPostDate,userId]
+    );
+}
 
+async function getUnlockedDialoguesByuserId(userId){
+    const db=await dbPromise;
+    return db.all(`
+        SELECT d.id, d.characterId, d.text, d.voiceUrl
+        FROM dialogues as d
+        JOIN user_unlocked_dialogues as u ON d.id=u.dialogueId
+        WHERE u.userId=?
+        `,[userId])
+}
 
+async function unlockCharacter(userId,characterId) {
+    const db=await dbPromise;
+    const existing=await db.get(
+        `SELECT * FROM user_unlocked_characters
+        WHERE userId=? AND characterId=?`,[userId,characterId])
+    if(existing){//既に持ってたらuser_unlocked_charactersテーブルに入れない
+        return false;
+    }
+    await db.run(`INSERT INTO user_unlocked_characters(userId,characterId) VALUES(?,?)`,
+        [userId,characterId]
+    );
+    return true;
+}
+
+async function getUnlockedCharacterByUserId(userId){
+    const db=await dbPromise;
+    return db.all(`
+        SELECT c.id,c.name,c.imageUrl
+        FROM characters as c
+        JOIN user_unlocked_characters as u ON c.id=u.characterId
+        WHERE u.userId=?
+        `,[userId]);
+}
+async function unlockDialogue(userId,dialogueId) {
+    const db=await dbPromise;
+    const existing=await db.get(
+        `SELECT * FROM user_unlocked_dialogues
+        WHERE userId=? AND dialogueId=?`,[userId,dialogueId])
+    if(existing){
+        return false;
+    }
+    await db.run(`INSERT INTO user_unlocked_dialogues(userId,dialogueId) 
+                    VALUES (?, ?)`, [userId, dialogueId]);
+    return true;
+}
+
+async function updateUserPoints(userId,points){
+    const db=await dbPromise;
+    await db.run(`UPDATE users SET points=? WHERE id=?`,[points,userId])
+}
+
+async function getGachaItems(){
+    const db=await dbPromise;
+    const characters=await db.all(`
+            SELECT id,name,imageUrl FROM characters WHERE is_default=?`,
+            [false])//初期キャラ以外を取り出す
+    const dialogues=await db.all(`
+            SELECT id,text FROM dialogues WHERE characterId IS NOT NULL`)//個別セリフだけ取り出す
+    return{characters,dialogues};
+}
 // モジュールとして必要な関数をエクスポート
 module.exports = {
     getAllUsers,
@@ -324,4 +398,12 @@ module.exports = {
     getNotificationsByUserId,
     markNotificationAsRead,
     updateUserCharacter,
+    getUserById,
+    updateUserGachaStats,
+    getUnlockedDialoguesByuserId,
+    getUnlockedCharacterByUserId,
+    unlockCharacter,
+    unlockDialogue,
+    updateUserPoints,
+    getGachaItems,
 };

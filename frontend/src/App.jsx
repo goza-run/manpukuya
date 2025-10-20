@@ -11,6 +11,7 @@ import MobileMenu from './components/MobileMenu.jsx';
 import SummaryPage from './pages/SummaryPage.jsx';
 import { defaultCharacter } from './characters.js';
 import { characters } from './characters.js';
+import GachaPage from './pages/GachaPage.jsx';
 
 function App() {
   //ログイン認証のステート
@@ -21,12 +22,15 @@ function App() {
   const[isNotificationOpen,setIsNotificationOpen]=useState(false);//通知リストが開いているかどうか
   const notificationIconRef=React.useRef(null);
   //useRefはrefに入れることでdivなどのDOM要素を直接参照できるようになる
-  const notificaitionListRef=React.useRef(null);
+  const notificationListRef=React.useRef(null);
   const [isMobileMenuOpen,setIsMobileMenuOpen]=useState(false);
+  const[targetNotiId,setTargetNotiId]=useState(null)
+  //targetNotiIdは通知ボタンが押された際にどんな行動をするか？
   const[session,setSession]=useState({
     isLoggedIn:false,//最初はログインしていない
     role:null,
-    userId:null
+    userId:null,
+    points:0
   });
 //画面更新などが合ってもログインを継続する
 // (これがないといちいち打ち込んでログインしないといけない)
@@ -42,7 +46,8 @@ function App() {
         isLoggedIn:data.isLoggedIn,
         role:data.role,
         userId:data.userId,
-        selected_character:data.selected_character
+        selected_character:data.selected_character,
+        points:data.points
       });
       setIsLoading(false);
     };
@@ -60,12 +65,10 @@ function App() {
           setNotifications(data);
         }
       };
-      if(session.isLoggedIn){
-        fetchNotifications();
+      fetchNotifications();
 
-        const intervalId=setInterval(fetchNotifications,15000);//15秒ごとに通知を取得
-        return()=>clearInterval(intervalId);//クリーンアップ関数、ログアウト時やコンポーネントが不要になったときにintervalをクリアする
-      };
+      const intervalId=setInterval(fetchNotifications,15000);//15秒ごとに通知を取得
+      return()=>clearInterval(intervalId);//クリーンアップ関数、ログアウト時やコンポーネントが不要になったときにintervalをクリアする
     }else{
       setNotifications([]);//ログアウトしたら通知を空にする
     }
@@ -94,7 +97,7 @@ function App() {
     const handleClickOutside=(event)=>{
       if(
         /*notificationIconRef.currentで
-        <div ref={notificaitionListRef}>
+        <div ref={tionListRef}>
               <NotificationList 
                 notifications={notifications}
               />
@@ -103,14 +106,14 @@ function App() {
         !notificationIconRef.current.contains(event.target)で
         クリックされた場所がnotificationIconRef.current(ベル)の中じゃなかったら閉じる
         さらに
-        notificaitionListRef.current&&
-        !notificaitionListRef.current.contains(event.target)
+        notificationListRef.current&&
+        !notificationListRef.current.contains(event.target)
         で通知リストの中でもなかったら閉じる
         つまりベルでも通知リストでもなかったら閉じる
         */
         notificationIconRef.current&&!notificationIconRef.current.contains(event.target)&&
-        notificaitionListRef.current&&
-        !notificaitionListRef.current.contains(event.target)
+        notificationListRef.current&&
+        !notificationListRef.current.contains(event.target)
       ){
         setIsNotificationOpen(false); 
       }
@@ -126,6 +129,14 @@ function App() {
     //removeEventListener=次のイベントを削除する
   },[isNotificationOpen]);  
 
+  //通知がクリックされた時の処理
+  const handleNotificationClick=(notification)=>{
+    if(view!=="home"){
+      setView("home");
+    }
+    setTargetNotiId(notification.expenseId);
+    setIsNotificationOpen(false);
+  }
   
   //sessionが変わるたびにアイコンを変える
    useEffect(() => {
@@ -175,7 +186,8 @@ function App() {
       isLoggedIn:true,
       role:user.role,
       userId:user.id,//user
-      selected_character:user.selected_character 
+      selected_character:user.selected_character,
+      points:user.points 
     });
     setView("home");//ログインしたらホーム画面に飛ぶ
   };
@@ -203,6 +215,11 @@ function App() {
   };
   const unreadCount=notifications.filter(n=>!n.is_read).length;
     //バックエンドにも更新を送る
+  const handleUpdatePoints=(newPoints)=>{
+    setSession(prev=>({...prev,points:newPoints}));
+  };
+
+
   if(isLoading){//上のuseEffectが機能していれば必ずfalseになる
     return<div>Loading...</div>
   }
@@ -224,6 +241,7 @@ function App() {
             <div className="desktop-nav">
               <button onClick={()=>setView("home")}>ホーム</button>
               <button onClick={()=>setView("summary")}>みんなのごはん</button>
+              <button onClick={()=>setView("gacha")}>ガチャ</button>
               {session.role==="admin"&& (
                 <button onClick={()=>setView("admin")}>管理者ページ</button>
             )}
@@ -260,16 +278,31 @@ function App() {
                 }}
               />
             )}
-          {view==="home" && <HomePage session={session} onCharacterSelect={handleCharacterSelect}/>}
+          {view==="home"&&(
+            <HomePage
+              session={session}
+              onCharacterSelect={handleCharacterSelect}
+              targetNotiId={targetNotiId}
+              onTargetNotiHandled={()=>setTargetNotiId(null)}
+            />
+          )}
           {view==="summary" && <SummaryPage/>}
+          {view==="gacha"&&(<GachaPage 
+                              session={session}
+                              onUpdatePoints={handleUpdatePoints}
+                              points={session.points||0}
+                            />
+          )}
           {view==="admin" && session.role === "admin"&&<AdminPage session={session}/>}
           {isNotificationOpen && (
-            <div ref={notificaitionListRef}>
+            <div ref={notificationListRef}>
               <NotificationList 
                 notifications={notifications}
+                onNotificationClick={handleNotificationClick}
               />
             </div>
           )}
+          
         </div>
 			) : (
 				// 非ログイン時はLoginPageを表示

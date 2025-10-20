@@ -23,7 +23,7 @@ function CommentItem({comment,onDelete,session}) {
 					style={{maxWidth:"150px",height:"auto",marginTop:"10px"}}
 				/>
 			)}<br></br>
-            {session.userId===comment.authorId&&(
+            {(session.userId===comment.authorId||session.role==="admin")&&(
             <button className='delete'
 					onClick={onDelete}>削除</button>
             )}

@@ -10,6 +10,7 @@ function MobileMenu({onViewChange,onLogout,session}){
         <div className="mobile-menu">
             <button onClick={()=>handleViewChange("home")}>ホーム</button>
             <button onClick={()=>handleViewChange("summary")}>みんなのごはん</button>
+            <button onClick={()=>handleViewChange("gacha")}>ガチャ</button>
             {session.role==="admin"&&(
                 <button onClick={()=>handleViewChange("admin")}>管理者ページ</button>
             )}

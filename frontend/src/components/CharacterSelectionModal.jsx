@@ -2,14 +2,7 @@ import React from "react";
 import API_BASE_URL from "../config";
 import './CharacterSelectionModal.css';
 
-const characters = [
-    { id: 'char0', name: 'まんぷくん', imageUrl: '/Manpukun.png' },
-    { id: 'char1', name: 'ふっしゃん', imageUrl: '/Fusshan.png' },
-    { id: 'char2', name: 'ともくん', imageUrl: '/Tomokun.png' },
-    { id: 'char3', name: 'AYA', imageUrl: '/AYA.png' },
-];
-
-function CharacterSelectionModal({onClose,onCharacterSelect}){//onCharacterSelect=handleCharacterSelect(App.jsx)
+function CharacterSelectionModal({onClose,onCharacterSelect,unlockedCharacters}){//onCharacterSelect=handleCharacterSelect(App.jsx)
     const handleSelect=async(characterId)=>{
         //選んだキャラクターをサーバーに送信してDBに保存
         const response=await fetch(`${API_BASE_URL}/api/user/character`,{
@@ -31,7 +24,7 @@ function CharacterSelectionModal({onClose,onCharacterSelect}){//onCharacterSelec
             <div className="modal-content">
                 <h3>お供を選んでね！</h3>
                 <div className="character-grid">
-                    {characters.map(char=>(
+                    {unlockedCharacters.map(char=>(
                         <div key={char.id} className="character-card" onClick={()=>handleSelect(char.id)}>
                             <img src={char.imageUrl} alt={char.name} style={{width:"100px",height:"100px"}}/>
                             <p>{char.name}</p>

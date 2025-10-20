@@ -1,0 +1,64 @@
+/* src/pages/HomePage.css */
+
+.dialogue-bubble {
+  position: absolute;
+  bottom: 110%; /* 画像の上に表示 */
+  left: 50%;
+  transform: translateX(-50%);
+  
+  background-color: white;
+  padding: 10px 15px;
+  border-radius: 15px;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  
+  width: max-content; /* 内容に合わせて幅を自動調整 */
+  max-width: 200px;
+  text-align: center;
+  font-size: 0.9rem;
+  z-index: 10;
+  
+  /* アニメーション */
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 吹き出しのしっぽ */
+.dialogue-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: white transparent transparent transparent;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ジャンプアニメーションの定義 */
+@keyframes jump {
+  0% {
+    transform: translateY(0); /* 開始時（地面） */
+  }
+  50% {
+    transform: translateY(-15px); /* 中間（一番高い位置） */
+  }
+  100% {
+    transform: translateY(0); /* 終了時（地面） */
+  }
+}
+
+/* アニメーションを適用するためのクラス */
+.jump-animation {
+  animation: jump 0.4s ease-out;
+}

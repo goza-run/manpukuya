@@ -24,11 +24,36 @@ const{
     getNotificationsByUserId,
     markNotificationAsRead,
     updateUserCharacter,
+    getUserById,
+    updateUserGachaStats,
+    getUnlockedDialoguesByuserId,
+    getUnlockedCharacterByUserId,
+    unlockCharacter,
+    unlockDialogue,
+    updateUserPoints,
+    getGachaItems,
 }=require("./db");
+
 const e = require('express');
 const router =express.Router();
 const isProduction = process.env.NODE_ENV === 'production';
 const uploadsDir = isProduction ? '/data/uploads' : 'uploads';
+const getLocalDate = () => {
+    const d = new Date();
+    // 'ja-JP'ロケールと'Asia/Tokyo'タイムゾーンを指定してフォーマット
+    const options = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        timeZone: 'Asia/Tokyo'
+    };
+    
+    // '2025/10/20' のような文字列が返る
+    const jstDateString = new Intl.DateTimeFormat('ja-JP', options).format(d);
+    
+    // 'YYYY-MM-DD' 形式に変換して返す
+    return jstDateString.replace(/\//g, '-');
+};
 
 //画像フォルダの設定
 const storage=multer.diskStorage({
@@ -59,7 +84,8 @@ router.post("/login",async(req,res)=>{
             id:user.id,
             username:user.username,
             role:user.role,
-            selected_character:user.selected_character
+            selected_character:user.selected_character,
+            points:user.points
         });
     }else{
         res.status(401).send("Invalid credentials");
@@ -77,46 +103,121 @@ router.post("/logout",(req,res)=>{
     });
 });
 //セッション状態の維持
-router.get("/session",(req,res)=>{
+router.get("/session",async (req,res)=>{
     if(req.session.userId){
+        //dbから最新のユーザー情報を取得し直す(これがないとpoint系にエラーが出る)
+        const user=await getUserById(req.session.userId);
+        if(!user){
+            req.session.destroy();
+            return res.status(200).json({isLoggedIn:false});
+        }
+        req.session.points=user.points;
+        req.session.selected_character=user.selected_character
         res.status(200).json({
             isLoggedIn:true,
             username:req.session.username,
             role:req.session.role,
             userId:req.session.userId,
             //上のauthenticateUserからusernameは受け取っている
-            selected_character:req.session.selected_character
+            selected_character:req.session.selected_character,
+            points:req.session.points
         });
     }else{
         res.status(200).json({isLoggedIn:false});
     }
 })
-//記録を取得する
-router.get("/expenses",async(req,res)=>{
-    if (!req.session.userId){
+//全記録を取得する
+router.get("/expenses", async (req, res) => {
+    if (!req.session.userId) {
         return res.status(401).send("Unauthorized");
     }
-    const expense=await getExpensesByUserId(req.session.userId);
-    res.json(expense);
-})
+    try {
+        const expenses = await getExpensesByUserId(req.session.userId); 
+        res.json(expenses);
+    } catch (error) {
+        console.error("複数投稿の取得中にエラー:", error);
+        res.status(500).send("Server error");
+    }
+});
+
+//admin向けに特定の投稿を手に入れるAPI
+router.get("/expense/:id",async(req,res)=>{
+    if(!req.session.userId){
+        return res.status(401).send("Unauthorized");
+    }
+    try{
+        const expense=await getExpenseById(req.params.id);
+        if(expense){
+            res.status(200).json(expense);
+        }else{
+            res.status(404).send("Expense not found")
+        }
+    }catch (error){
+        console.error("単一投稿の取得中にエラー:",error);
+        res.status(500).send("server error");
+    }
+});
 
 //記録を追加する(postと言われなければ基本的に上の方が出るよ)
 router.post("/expenses",upload.single("photo"),async(req,res)=>{//singleで一個だけアップロードされることを表す
     if (!req.session.userId){
         return res.status(401).send("Unauthorized");
     }
-    const{amount,description,expense_date,meal_type,nomikai}=req.body//テキストデータは打ち込んだ情報からもらう
-    let photo_path = null; // photo_pathをnullで初期化
-    if (req.file) {
+    try{
+        const{amount,description,expense_date,meal_type,nomikai}=req.body//テキストデータは打ち込んだ情報からもらう
+        let photo_path = null; // photo_pathをnullで初期化
+        if (req.file) {
         // req.file.path のバックスラッシュをスラッシュに置換する
-        const internalPath = req.file.path.replace(/\\/g, "/");
+            const internalPath = req.file.path.replace(/\\/g, "/");
         //replaceの後は正規表現、\\2個になっているが、これで\を探してきなさいという意味になり、
         //gはグローバル(文字列全体を検索して見つかったものを全て置き換える)、これがないと最初に見つかったやつだけ変わる
-        photo_path = internalPath.substring(internalPath.indexOf("uploads/"));
-    }
+            photo_path = internalPath.substring(internalPath.indexOf("uploads/"));
+        }
 
-    await createExpense(req.session.userId,{amount,photo_path,description,expense_date,meal_type,nomikai});
-    res.status(200).send("Expense added")
+        await createExpense(req.session.userId,{amount,photo_path,description,expense_date,meal_type,nomikai});
+
+        const todayStr=getLocalDate();
+        const user=await getUserById(req.session.userId);
+
+        if(user.last_post_date!==todayStr){
+        //今日既にポイントをもらっていたら何もしない
+            // まず getLocalDate() で取得した JST の「今日」から Date オブジェクトを（安全に）作成
+            // "2025-10-20" -> "2025-10-20T00:00:00+09:00" として解釈させる
+            const todayJstDate = new Date(todayStr + "T00:00:00+09:00"); 
+
+            // その日付のまま 1 日引く
+            todayJstDate.setDate(todayJstDate.getDate() - 1); 
+            
+            // "YYYY-MM-DD" 形式にフォーマットし直す (JSTの「昨日」)
+            const yesterdayStr = todayJstDate.getFullYear() + '-' + 
+                                ('0' + (todayJstDate.getMonth() + 1)).slice(-2) + '-' + 
+                                ('0' + todayJstDate.getDate()).slice(-2);
+
+            let newStreak=user.login_streak;
+            let pointsToAdd=0;
+
+            //連続記録ボーナス
+            if(user.last_post_date===yesterdayStr){//2日目以降
+                newStreak+=5;
+                pointsToAdd=100+(newStreak*10);//二日目=200pt,3日目=250pt
+            }else{//1日目ならこっち
+                newStreak=5;
+                pointsToAdd=100;
+            }
+
+            const newTotalPoints=user.points+pointsToAdd;
+
+            await updateUserGachaStats(req.session.userId,{
+                points:newTotalPoints,
+                streak:newStreak,
+                lastPostDate:todayStr
+            });
+        }
+        res.status(200).send("Expense added")
+    }catch(error){
+         console.error("食事記録の追加中にエラー",error);
+         res.status(500).send("Server error during expense creation");
+    }
 })
 
 //記録を消去する
@@ -337,7 +438,7 @@ router.delete("/comments/:id",async(req,res)=>{//特定のコメントを消し�
         if(!comment){
             return res.status(404).send("Comment not found");
         }
-        if(comment.authorId!==req.session.userId){//自分が書いたコメントじゃなかったら
+        if(comment.authorId!==req.session.userId&&req.session.role !=="admin"){//自分が書いたコメントじゃなかったら
             return res.status(403).send("Forbidden");
         }
         await deleteCommentById(commentId);
@@ -398,6 +499,112 @@ router.post("/user/character",async(req,res)=>{
         res.status(500).send("Server error");
     }
 });
+//ガチャ
+router.post("/gacha/pull",async(req,res)=>{
+    if(!req.session.userId){
+        return res.status(401).send("Unauthorized");
+    }
+    try{
+        const GACHA_COST=100;//ガチャ一回
+        const user=await getUserById(req.session.userId)
+
+        if(user.points<GACHA_COST){
+            return res.status(400).json({message:"ポイントが足りません。"})
+        }
+        const CHARACTER_CHANCE=2;//各キャラの排出確率
+        const DIALOGUE_CHANCE=3;//各セリフの排出確率
+        let totalPrizeChance=0
+
+        //景品リスト
+        const {characters,dialogues}=await getGachaItems();
+        const prizePool=[
+            ...characters.map(c=>{
+                totalPrizeChance +=CHARACTER_CHANCE;
+                return{type:"character",item:c,chance:CHARACTER_CHANCE};
+            }),
+            ...dialogues.map(d=>{
+                totalPrizeChance +=DIALOGUE_CHANCE;
+                return{type:"dialogue",item:d,chance:DIALOGUE_CHANCE};
+            }),
+        ]
+        //100%から景品を引いた確率がポイント
+        const pointsChance=100-totalPrizeChance;
+        if(pointsChance>0){
+            prizePool.push({type:"points",item:{name:"50ポイント"},chance:pointsChance});
+        }
+        //console.log("--- Gacha Prize Pool Debug ---", prizePool);
+        let random=Math.random()*100;
+        let wonPrize=null;
+        for(const prize of prizePool){
+            random -=prize.chance;//仕組みは下で説明する
+            if(random<=0){
+                wonPrize=prize;
+                break;
+            }
+        }
+        
+        let newTotalPoints=user.points-GACHA_COST;
+        let isNew=true;//新規かどうか
+        let message="";
+
+        if(wonPrize.type==="character"){
+            isNew=await unlockCharacter(user.id,wonPrize.item.id);
+            if(!isNew){
+                message=`${wonPrize.item.name}は既に仲間です!代わりに50ポイント獲得!`
+                newTotalPoints+=50;
+            }
+        }else if(wonPrize.type==="dialogue"){
+            isNew=await unlockDialogue(user.id,wonPrize.item.id);
+            if(!isNew){
+                message=`このセリフは既に解放済みです!代わりに20ポイント獲得!`
+                newTotalPoints+=20;
+            }
+        }else if(wonPrize.type==="points"){
+            newTotalPoints+=50;
+            }
+        await updateUserPoints(user.id,newTotalPoints);
+        res.status(200).json({
+            prize:wonPrize.item,
+            type:wonPrize.type,
+            isNew:isNew,
+            message:message,
+            newTotalPoints:newTotalPoints
+        });
+
+    }catch(error){
+        console.error("ガチャ中にエラー:",error);
+        res.status(500).send("Server error");
+    }
+})
+
+//解放キャラ取得
+router.get("/characters/unlocked",async(req,res)=>{
+    if(!req.session.userId){
+        return res.status(401).send("Unauthorized");
+    }
+    try{
+        const characters=await getUnlockedCharacterByUserId(req.session.userId);
+        res.status(200).json(characters);
+    }catch(error){
+        console.error("解放済みキャラの取得中にエラー:",error);
+        res.status(500).send("Server error");
+    }
+})
+
+//解放セリフ取得
+router.get("/dialogues",async(req,res)=>{
+    if(!req.session.userId){
+        return res.status(401).send("Unauthorized");
+    }
+    try{
+        const dialogues=await getUnlockedDialoguesByuserId(req.session.userId);
+        res.status(200).json(dialogues);
+    }catch(error){
+        console.error("セリフの取得中にエラー:",error);
+        res.status(500).send("Server error")
+    }
+})
+
 module.exports=router;
 /*req.fileの中身について
 {
@@ -411,3 +618,17 @@ module.exports=router;
   "size": 12345
 }こんな感じになってる*/
 
+/*ガチャの仕組み
+景品リスト(ポイント含む)の確率は合計で100,
+最初に生成されたランダムな値から景品の確率を順番に差し引く
+exp)
+ランダムな値=35
+景品Aの確率=10
+景品Bの確率=30
+
+1回目：35-10=25>0
+景品Aゲットならず、次のループへ
+2回目：25-30=-5<0
+景品Bゲット！終了！
+
+*/

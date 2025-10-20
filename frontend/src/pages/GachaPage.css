@@ -1,0 +1,120 @@
+.gacha-container {
+    padding: 1rem;
+    text-align: center;
+}
+
+.points-display {
+    font-size: 1.2rem;
+    margin: 1rem 0;
+}
+
+.points-display span {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.gacha-container button {
+    font-size: 1.2rem;
+    padding: 10px 20px;
+}
+
+.gacha-animation {
+    margin-top: 2rem;
+    font-size: 1.5rem;
+}
+
+.gacha-result {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.gacha-result img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 1rem 0;
+}
+
+.gacha-result .dialogue-text {
+    font-style: italic;
+    font-size: 1.1rem;
+    padding: 1rem;
+    background-color: white;
+    border-left: 5px solid #007bff;
+}
+
+.gacha-result .bonus-message {
+    font-weight: bold;
+    color: #28a745;
+}
+/*カットイン*/
+.cut-in-overlay {
+  position: fixed; /* 画面全体に固定 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* 最前面に表示 */
+  overflow: hidden; /* はみ出した画像を隠す */
+}
+
+/* カットインで表示される画像 */
+.cut-in-image {
+  max-height: 80%;
+  max-width: 80%;
+  /* ↓↓↓ アニメーションを適用 ↓↓↓ */
+  animation: slideInAndOut 2.5s ease-in-out forwards;
+}
+
+.cut-in-image.silhouette {
+  /* 1. まず真っ黒なシルエットにする */
+  filter: brightness(0) invert(1);
+
+  /* 2. このシルエットに虹色のオーバーレイをかけるイメージ */
+  /* アニメーションを適用 */
+  animation: rainbow-glow 1.5s linear infinite, slideInAndOut 2.5s ease-in-out forwards;
+}
+
+/* 虹色に色相を回転させるアニメーションを定義 */
+@keyframes rainbow-glow {
+  0% {
+    /* hue-rotateで色相を0度回転（元の色） */
+    /* sepiaとsaturateで色味を強調 */
+    filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(0deg);
+  }
+  50% {
+    /* 色相を180度回転 */
+    filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(180deg);
+  }
+  100% {
+    /* 色相を360度回転して一周 */
+    filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(360deg);
+  }
+}
+
+/* アニメーションの動きを定義 */
+@keyframes slideInAndOut {
+  0% {
+    transform: translateX(100vw); /* 画面右外からスタート */
+    opacity: 0.5;
+  }
+  20% {
+    transform: translateX(0); /* 中央に移動 */
+    opacity: 1;
+  }
+  80% {
+    transform: translateX(0); /* 中央で停止 */
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100vw); /* 画面左外へ消える */
+    opacity: 0;
+  }
+}

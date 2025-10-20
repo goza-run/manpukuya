@@ -19,7 +19,7 @@ const formatTimeAgo=(dateString)=>{
     return "たった今";
 };
 
-function NotificationList({notifications}){
+function NotificationList({notifications,onNotificationClick=()=>{}}){
     if(notifications.length===0){
         return(
             <div className="notification-list-container">
@@ -30,7 +30,10 @@ function NotificationList({notifications}){
     return(
         <div className="notification-list-container">
             {notifications.map((notification)=>(
-                <div key={notification.id} className={`notification-item" ${!notification.is_read? "unread":""}`}>
+                <div key={notification.id} className={`notification-item ${!notification.is_read? "unread":""}`}
+                    onClick={()=>onNotificationClick(notification)}
+                    style={{cursor:"pointer"}}
+                >
                     <p><strong>{notification.senderName}</strong>さんがあなたの投稿にコメントしました。</p>
                         <span className="notification-time">{formatTimeAgo(notification.created_at)}</span>
                 </div>

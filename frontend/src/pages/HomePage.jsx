@@ -9,8 +9,10 @@ import CommentModal from "../components/CommentModal";
 import CharacterSelectionModal from "../components/CharacterSelectionModal";
 import{characters,defaultCharacter} from "../characters";
 import API_BASE_URL from "../config";
+import "./HomePage.css";
+import { useRef } from "react";
 
-function HomePage({ onLogout,session,onCharacterSelect }) {
+function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled}) {
 	// 食費データの配列を管理するステートを定義
 	const [expenses, setExpense] = useState([]);
 	const[budget,setBudget]=useState(null);
@@ -19,8 +21,12 @@ function HomePage({ onLogout,session,onCharacterSelect }) {
 	const[editing,setIsEditing]=useState(null);
 	const[commenting,setIsCommenting]=useState(null);
 	const[isCharacterModal,setIsCharacterModal]=useState(false);
-
-// []の中身がどんな時expenseを実行するかと言うもので今回みたいな空白の場合はページを開いた時のみになる
+	const[dialogues,setDialogues]=useState([])//解放済みセリフ
+	const[currentDialogue,setCurrentDialogue]=useState("")//表示中のセリフ
+	const[characters,setCharacters]=useState([])//解放済みキャラ
+	const[isJumping,setIsJumping]=useState(false)
+	const timeoutIdRef=useRef(null);
+	const audioRef=useRef(null)
 	// 食費データ、目標金額を取得する非同期関数
 	const fetchExpense = async () => {
 		// 食費データを取得するAPIリクエスト
@@ -129,16 +135,122 @@ function HomePage({ onLogout,session,onCharacterSelect }) {
 	}
 
 	const monthlyExpenses=groupedExpenses[currentMonth]||[];//今月のデータだけ取り出す
-	const expensesUnitToday=monthlyExpenses.filter(expense=>{
+	const expensesUntilToday=monthlyExpenses.filter(expense=>{
 		const expenseDate=new Date(expense.expense_date);
 		return expenseDate.getDate()<=currrentDay//今日の日にちよりも小さいものだけ取り出す
 	});//今日までのデータだけ取り出す
-	const totalExpenseToday=expensesUnitToday.reduce((sum,expense)=>sum+expense.amount,0);
+	const totalExpenseToday=expensesUntilToday.reduce((sum,expense)=>sum+expense.amount,0);
 	
 	if(totalExpenseToday>0&&currrentDay>0){
 		const dailyActualExpense=totalExpenseToday/currrentDay;//今日までの1日あたりの食費
 		actualMa=(dailyActualExpense/600).toFixed(2);
 	}
+
+	//通知が来たら指定のコメントモーダルに移動するシステム
+	useEffect(()=>{
+		const openCommentModalFor=async (expenseId)=>{
+			//自分の投稿リストから同じやつがあるか探す
+			let targetExpense=expenses.find(exp=>exp.id===expenseId);
+			//なかったらAPIを叩いて取得しにいく(admin用)
+			if(!targetExpense){
+				console.log("自分の投稿リストにないのでAPIから取得します。");
+				const response=await fetch(`${API_BASE_URL}/api/expense/${expenseId}`,{
+					credentials:"include"
+				});
+				if (response.ok){
+					targetExpense=await response.json();
+				}
+			}
+			if(targetExpense){
+				setIsCommenting(targetExpense);
+			}
+			onTargetNotiHandled();
+		};
+		if(targetNotiId){
+			openCommentModalFor(targetNotiId);
+		}
+		//if(targetNotiId){
+		//	const targetNoti=expenses.find(exp=>exp.id===targetNotiId)
+		//	 if (targetNoti){
+		//		setIsCommenting(targetNoti);
+		//	 }
+		//	 onTargetNotiHandled();
+		//}
+	},[targetNotiId,expenses,onTargetNotiHandled])
+
+	//お供セリフ
+	useEffect(()=>{
+		const fetchDialogues=async()=>{
+			const response=await fetch(`${API_BASE_URL}/api/dialogues`,{
+				credentials:"include"
+			});
+			if(response.ok){
+				const data =await response.json();
+				setDialogues(data);
+			}
+		};
+		fetchDialogues()
+	},[])
+	const handleCharacterClick=()=>{
+		console.log("--- Character Click Debug ---");
+    	console.log("現在のお供のID:", session.selected_character);
+    	console.log("解放済みの全セリフ:", dialogues);
+    	console.log("--------------------------");
+		setIsJumping(true);//ぴょんぴょんさせる
+		if(audioRef.current){
+			audioRef.current.pause();
+			audioRef.current.currentTime=0;
+		}
+		if(dialogues.length===0) return;//台詞なしは何もしない
+		clearTimeout(timeoutIdRef.current)//既存のタイマーがあればキャンセル
+		const selectedCharacterId=session.selected_character;
+
+		const availabeDialogues=dialogues.filter(
+			d=>d.characterId===selectedCharacterId||d.characterId===null
+		);//dialoguesテーブルのセリフとキャラクターを結ぶ
+
+		if(availabeDialogues.length>0){
+			const randomIndex=Math.floor(Math.random()*availabeDialogues.length);
+			//Math.random()は0~1までの乱数
+			// availabeDialoguesの数だけのランダムな数字を取り出す(Math.floorは小数点切り捨て)
+			const randomDialogue=availabeDialogues[randomIndex];
+			setCurrentDialogue(randomDialogue.text);
+			
+			let voiceToPlay=null;
+			const AYA_ID="char3";
+			//個別セリフでかつボイスがある場合
+			if(randomDialogue.characterId!==null&&randomDialogue.voiceUrl){
+				voiceToPlay=randomDialogue.voiceUrl;
+			}
+			//共通セリフでかつAYAである場合
+			else if(randomDialogue.characterId===null&&selectedCharacterId===AYA_ID&&randomDialogue.voiceUrl){
+				voiceToPlay=randomDialogue.voiceUrl;
+			}
+			if(voiceToPlay){
+				const audio=new Audio(voiceToPlay);
+				audioRef.current=audio;
+				audio.play();
+			}
+			timeoutIdRef.current=setTimeout(()=>{
+				setCurrentDialogue("");
+			},5000)
+			
+		}
+	};
+	
+	//キャラ解放
+	useEffect(()=>{
+		const fetchUnlockedCharacters=async()=>{
+			const response=await fetch(`${API_BASE_URL}/api/characters/unlocked`,{
+				credentials:"include"
+			});
+			if (response.ok){
+				const data=await response.json();
+				setCharacters(data);
+			}
+		};
+		fetchUnlockedCharacters();
+	},[]);
 
 	//月の並び替え(調整しないと辞書順で昔の日にちが上になるので逆にする)
 	const sortedMonths=Object.keys(groupedExpenses).sort((a,b)=>b.localeCompare(a));
@@ -157,13 +269,22 @@ function HomePage({ onLogout,session,onCharacterSelect }) {
 		<div>
 			<div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"10px"}}>
 				<h2>満伏屋</h2>
-				<div style={{display:"flex",alignItems:"center",gap:"10px"}}>
+				<div
+					onClick={handleCharacterClick}
+					style={{cursor:"pointer",position:"relative"}}
+				>
 					<img
 						src={selectedCharacter.imageUrl}
 						alt={selectedCharacter.name}
-						style={{width:"100px",height:"100px"}}
+						className={isJumping?"jump-animation":""}
+						onAnimationEnd={()=>setIsJumping(false)}//アニメーション終わったらまたfalseに
+						style={{width:"100px",height:"100px",borderRadius:"50%"}}
 					/>
-					<br/>
+					{currentDialogue&&(
+						<div className="dialogue-bubble">
+							{currentDialogue}
+						</div>
+					)}
 				</div>
 			</div>
 			<hr/>
@@ -175,6 +296,7 @@ function HomePage({ onLogout,session,onCharacterSelect }) {
 				<CharacterSelectionModal
 					onClose={()=>setIsCharacterModal(false)}
 					onCharacterSelect={onCharacterSelect}
+					unlockedCharacters={characters}
 				/>
 			)}
 			
@@ -233,7 +355,7 @@ function HomePage({ onLogout,session,onCharacterSelect }) {
 			)}
 			{commenting&&(
 				<CommentModal
-					expense={commenting}
+					expense={commenting}//ここにはExpenseItemでクリックした食事内容がある
 					onClose={()=>setIsCommenting(null)}
 					session={session}
 				/>

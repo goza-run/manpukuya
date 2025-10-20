@@ -3,7 +3,7 @@ import ExpenseList from '../components/ExpenseList';
 import CommentModal from '../components/CommentModal';
 import API_BASE_URL from '../config';
 
-function AdminPage(session) {
+function AdminPage({session}) {
     const [users, setUsers] = useState([]);
     const [error, setError] = useState('');
     const[selectUser,setSelectUser]=useState(null);
