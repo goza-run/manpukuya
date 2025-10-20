@@ -284,6 +284,7 @@ function App() {
               onCharacterSelect={handleCharacterSelect}
               targetNotiId={targetNotiId}
               onTargetNotiHandled={()=>setTargetNotiId(null)}
+              onUpdatePoints={handleUpdatePoints}
             />
           )}
           {view==="summary" && <SummaryPage/>}

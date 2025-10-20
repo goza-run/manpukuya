@@ -178,11 +178,13 @@ router.post("/expenses",upload.single("photo"),async(req,res)=>{//singleで一�
 
         const todayStr=getLocalDate();
         const user=await getUserById(req.session.userId);
+        let newTotalPoints = user.points;
 
         if(user.last_post_date!==todayStr){
         //今日既にポイントをもらっていたら何もしない
             // まず getLocalDate() で取得した JST の「今日」から Date オブジェクトを（安全に）作成
             // "2025-10-20" -> "2025-10-20T00:00:00+09:00" として解釈させる
+            
             const todayJstDate = new Date(todayStr + "T00:00:00+09:00"); 
 
             // その日付のまま 1 日引く
@@ -205,7 +207,7 @@ router.post("/expenses",upload.single("photo"),async(req,res)=>{//singleで一�
                 pointsToAdd=100;
             }
 
-            const newTotalPoints=user.points+pointsToAdd;
+            newTotalPoints=user.points+pointsToAdd;
 
             await updateUserGachaStats(req.session.userId,{
                 points:newTotalPoints,
@@ -213,7 +215,7 @@ router.post("/expenses",upload.single("photo"),async(req,res)=>{//singleで一�
                 lastPostDate:todayStr
             });
         }
-        res.status(200).send("Expense added")
+        res.status(200).json({message:"Expense added",newTotalPoints:newTotalPoints});
     }catch(error){
          console.error("食事記録の追加中にエラー",error);
          res.status(500).send("Server error during expense creation");

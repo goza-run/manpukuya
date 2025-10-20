@@ -12,7 +12,7 @@ import API_BASE_URL from "../config";
 import "./HomePage.css";
 import { useRef } from "react";
 
-function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled}) {
+function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled,onUpdatePoints}) {
 	// 食費データの配列を管理するステートを定義
 	const [expenses, setExpense] = useState([]);
 	const[budget,setBudget]=useState(null);
@@ -71,6 +71,10 @@ function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled}) 
 			credentials: 'include' 
 		});
 		if (response.ok) { // レスポンスが成功した場合
+			const data=await response.json();//ポイントの更新をもらう
+			if(data.newTotalPoints!==undefined){
+				onUpdatePoints(data.newTotalPoints);
+			}
 			fetchExpense(); // リストを再取得して更新
 		}
 	};
