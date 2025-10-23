@@ -4,6 +4,9 @@
     justify-content: center;
     gap: 1rem;
     padding: 1rem;
+
+    max-height:50vh;
+    overflow-y:auto;
 }
 
 .character-card {
