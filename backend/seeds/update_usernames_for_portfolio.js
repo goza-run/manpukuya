@@ -2,6 +2,7 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> } 
  */
+const bcrypt=require('bcrypt');
 exports.seed = async function(knex) {
   await knex("users").where("username","ゆきまんこ").update({username:"ゆきや"})
   console.log("ポートフォリオ用にユーザー名を更新しました。")
