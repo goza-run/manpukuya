@@ -513,7 +513,7 @@ router.post("/gacha/pull",async(req,res)=>{
         if(user.points<GACHA_COST){
             return res.status(400).json({message:"ポイントが足りません。"})
         }
-        const CHARACTER_CHANCE=5;//各キャラの排出確率
+        const CHARACTER_CHANCE=2;//各キャラの排出確率
         const DIALOGUE_CHANCE=3;//各セリフの排出確率
         let totalPrizeChance=0
 
