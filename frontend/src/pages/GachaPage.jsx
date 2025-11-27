@@ -64,7 +64,7 @@ function GachaPage({session,onUpdatePoints,points}){
                 あなたのポイント:<span>{points.toLocaleString()}pt</span>
             </div>
             <img
-            src={"/manpukuya_gacha_1.png"}
+            src={"/manpukuya_gacha_2.png"}
             alt="ガチャキャンペーン"
             style={{ maxWidth: '100%', height: 'auto', margin: '1rem 0' }}
             />
@@ -85,7 +85,7 @@ function GachaPage({session,onUpdatePoints,points}){
                             <img 
                                 src={result.prize.imageUrl} 
                                 alt={result.prize.name} 
-                                style={{ width: '100px', height: '100px' }} 
+                                style={{ width: '50px', height: '50px' }} 
                             />
                             <h4>{result.prize.name}</h4>
                         </div>
