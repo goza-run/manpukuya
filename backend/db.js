@@ -367,13 +367,13 @@ async function updateUserPoints(userId,points){
     await db.run(`UPDATE users SET points=? WHERE id=?`,[points,userId])
 }
 
-async function getGachaItems(){
+async function getGachaItems(){//ひかるん以外のキャラとセリフを取得
     const db=await dbPromise;
     const characters=await db.all(`
-            SELECT id,name,imageUrl FROM characters WHERE is_default=?`,
+            SELECT id,name,imageUrl FROM characters WHERE is_default=? AND id != "char5"`,
             [false])//初期キャラ以外を取り出す
     const dialogues=await db.all(`
-            SELECT id,text FROM dialogues WHERE characterId IS NOT NULL`)//個別セリフだけ取り出す
+            SELECT id,text FROM dialogues WHERE characterId IS NOT NULL AND characterId != "char5"`)//個別セリフだけ取り出す
     return{characters,dialogues};
 }
 // モジュールとして必要な関数をエクスポート

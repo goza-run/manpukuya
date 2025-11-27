@@ -22,6 +22,9 @@ exports.seed = async function(knex) {
     {id:"char5",name:"ひかるん",imageUrl:"/characters/Hikarun.png",is_default:false},
     {id:"char6",name:"カープ坊やたち",imageUrl:"/characters/CarpBoys.png",is_default:false},
     {id:"char7",name:"Orix坊や",imageUrl:"/characters/Orixboy.png",is_default:false},
+    {id:"char8",name:"みかん、ハリボー、たこ焼きを丸めて作ったやつ",imageUrl:"/characters/Takoyaki.png",is_default:false},
+    {id:"char9",name:"田中スペシャル",imageUrl:"/characters/TanakaSpecial.png",is_default:false},
+    {id:"char10",name:"BigEvolution",imageUrl:"/characters/BigEvolution.png",is_default:false},
   ]).onConflict("id").ignore();//重複禁止にすることで上のコメントアウトコードの役割を担っている
 
   await knex("dialogues").insert([
