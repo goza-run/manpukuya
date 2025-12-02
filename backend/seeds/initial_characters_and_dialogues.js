@@ -87,4 +87,8 @@ exports.seed = async function(knex) {
       }
     }
   }
+  //指定のキャラを限定にする
+  await knex('characters')
+    .where('id','char2')
+    .update({is_default:false});
 };
