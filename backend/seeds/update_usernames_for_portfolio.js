@@ -8,7 +8,7 @@ exports.seed = async function(knex) {
   console.log("ポートフォリオ用にユーザー名を更新しました。")
   const userExists=await knex('users').where("username","test").first();
   if(userExists){
-    await knex('users').where("username","test").del();
+    
     console.log("User 'test' already exists. No changes made.");
   }else{
     const hashedPassword = await require('bcrypt').hash('1234test', 10);
