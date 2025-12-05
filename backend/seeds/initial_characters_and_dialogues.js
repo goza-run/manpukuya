@@ -14,7 +14,7 @@ exports.seed = async function(knex) {
   
   await knex('characters').insert([
     {id: "char0", name: 'まんぷくん',imageUrl:"/characters/Manpukun.png",is_default:true},
-    {id: "char1", name: 'ふっしゃん',imageUrl:"/characters/Fusshan.png",is_default:true},
+    //{id: "char1", name: 'ふっしゃん',imageUrl:"/characters/Fusshan.png",is_default:true},
     {id: "char2", name: 'ともくん',imageUrl:"/characters/Tomokun.png",is_default:true},
      //ガチャキャラ
     {id:"char3", name: 'AYA',imageUrl:"/characters/AYA.png",is_default:false},
@@ -34,11 +34,11 @@ exports.seed = async function(knex) {
     {id:3,characterId:null,text:"外食ばっかりになってないかな？",voiceUrl:"/voices/AYA_voice_3.mp3"},
     {id:4,characterId:null,text:"君に会えない日があると寂しいなぁ",voiceUrl:"/voices/AYA_voice_4.mp3"},
 
-    //ふっしゃん
+    /*ふっしゃん
     {id:20,characterId:"char1",text:"完食までが出席ですよ"},
     {id:21,characterId:"char1",text:"陽電子不足だなあ"},
     {id:22,characterId:"char1",text:"君をフーリエ変換したい"},
-
+    */
     //ともくん
     {id:30,characterId:"char2",text:"太陽光スペクトルに想いを馳せて"},
     {id:31,characterId:"char2",text:"物理学で必要なものは、微分、積分、そして自分"},
