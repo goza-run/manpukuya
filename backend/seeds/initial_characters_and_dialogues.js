@@ -26,7 +26,7 @@ exports.seed = async function(knex) {
     {id:"char9",name:"田中スペシャル",imageUrl:"/characters/TanakaSpecial.png",is_default:false},
     {id:"char10",name:"BigEvolution",imageUrl:"/characters/BigEvolution.png",is_default:false},
     {id:"char11",name:"ガブチュウ",imageUrl:"/characters/Gabuchu.png",is_default:false},
-  ]).onConflict("id").ignore();//重複禁止にすることで上のコメントアウトコードの役割を担っている(キャラを上書きしたかったらignoreではなくmergeにする)
+  ]).onConflict("id").merge();//重複禁止にすることで上のコメントアウトコードの役割を担っている(キャラを上書きしたかったらignoreではなくmergeにする)
 
   await knex("dialogues").insert([
     {id:1,characterId:null,text:"目標達成まで頑張ろう！！",voiceUrl:"/voices/AYA_voice_1.mp3"},
