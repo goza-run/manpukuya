@@ -312,7 +312,7 @@ function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled,on
 					{actualMa} ma/day
 					</span>
 				</p>
-				<p>※ma：松のやで食べることのできる定食の最低金額(1ma=600円)のこと</p>
+				<p>※ma：某定食チェーンで食べることのできる定食の最低金額(1ma=600円)のこと</p>
 				<p>理想のma/dayは目標金額を達成するために1日平均何maで過ごせば良いか</p>
 			</div>
 			<h3>食事を記録してね</h3>
