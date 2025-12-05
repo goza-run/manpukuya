@@ -272,7 +272,7 @@ function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled,on
 	return (//onLogout=handleLogout
 		<div>
 			<div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"10px"}}>
-				<h2>満伏屋</h2>
+				<h2>Manpukuya</h2>
 				<div
 					onClick={handleCharacterClick}
 					style={{cursor:"pointer",position:"relative"}}

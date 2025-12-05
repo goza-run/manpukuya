@@ -156,7 +156,7 @@ function App() {
         const manifestLink=document.getElementById("manifest");
         if(manifestLink){
             const manifestData={
-                "name":`満伏屋 with ${characterName}`,
+                "name":`Manpukuya with ${characterName}`,
                 "short_name":characterName,
                 "icons":[
                     {
