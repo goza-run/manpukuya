@@ -15,7 +15,7 @@ exports.seed = async function(knex) {
   await knex('characters').insert([
     {id: "char0", name: 'まんぷくん',imageUrl:"/characters/Manpukun.png",is_default:true},
     //{id: "char1", name: 'ふっしゃん',imageUrl:"/characters/Fusshan.png",is_default:true},
-    {id: "char2", name: 'ともくん',imageUrl:"/characters/Tomokun.png",is_default:true},
+    {id: "char2", name: 'Mr.West',imageUrl:"/characters/Mr_West.png",is_default:true},
      //ガチャキャラ
     {id:"char3", name: 'AYA',imageUrl:"/characters/AYA.png",is_default:false},
     {id:"char4",name:"TAKAHERO",imageUrl:"/characters/TAKAHERO.png",is_default:false},
@@ -26,7 +26,7 @@ exports.seed = async function(knex) {
     {id:"char9",name:"田中スペシャル",imageUrl:"/characters/TanakaSpecial.png",is_default:false},
     {id:"char10",name:"BigEvolution",imageUrl:"/characters/BigEvolution.png",is_default:false},
     {id:"char11",name:"ガブチュウ",imageUrl:"/characters/Gabuchu.png",is_default:false},
-  ]).onConflict("id").ignore();//重複禁止にすることで上のコメントアウトコードの役割を担っている
+  ]).onConflict("id").ignore();//重複禁止にすることで上のコメントアウトコードの役割を担っている(キャラを上書きしたかったらignoreではなくmergeにする)
 
   await knex("dialogues").insert([
     {id:1,characterId:null,text:"目標達成まで頑張ろう！！",voiceUrl:"/voices/AYA_voice_1.mp3"},
@@ -87,8 +87,9 @@ exports.seed = async function(knex) {
       }
     }
   }
-  //指定のキャラを限定にする
+  /*指定のキャラを限定にする
   await knex('characters')
     .where('id','char2')
     .update({is_default:false});
+  */
 };
