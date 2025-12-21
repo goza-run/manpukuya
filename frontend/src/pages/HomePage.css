@@ -62,3 +62,148 @@
 .jump-animation {
   animation: jump 0.4s ease-out;
 }
+/* frontend/src/pages/HomePage.css の末尾に追加 */
+
+/* --- モーダル内の選択肢スタイル --- */
+.input-method-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+  text-align: left;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center; /* 垂直中央揃え */
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #f9f9f9;
+}
+
+/* 選択されている時の見た目 */
+.radio-label.selected {
+  border-color: #4CAF50;
+  background-color: #e8f5e9;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+.radio-label input[type="radio"] {
+  transform: scale(1.2); /* ラジオボタンを少し大きく */
+  margin: 0;
+}
+
+.method-title {
+  display: block;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.method-value {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* 手入力欄のスタイル */
+.manual-input {
+  width: 90%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+/* frontend/src/pages/HomePage.css の一番下に追記 */
+
+/* --- モーダル用のスタイル --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* 背景を半透明の黒に */
+  display: flex;
+  justify-content: center; /* 横方向の中央揃え */
+  align-items: center;     /* 縦方向の中央揃え */
+  z-index: 1000;           /* 最前面に表示 */
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px; /* PCで見ても横に広がりすぎないように */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.gap-info-box {
+  background: #f0f8ff;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  text-align: left;
+}
+
+/* 選択肢のスタイル */
+.input-method-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+  text-align: left;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #f9f9f9;
+}
+
+.radio-label.selected {
+  border-color: #4CAF50;
+  background-color: #e8f5e9;
+}
+
+.radio-label input[type="radio"] {
+  transform: scale(1.2);
+  margin: 0;
+}
+
+.method-title {
+  display: block;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.manual-input {
+  width: 90%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

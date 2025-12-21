@@ -16,6 +16,8 @@ const{
     getBudget,
     setBudget,
     getMonthlySummarize,
+    getLatestExpenseDate,
+    getAverageAmount,
     getCommentById,
     getCommentByExpenseId,
     createComment,
@@ -173,49 +175,111 @@ router.post("/expenses",upload.single("photo"),async(req,res)=>{//singleで一�
         //gはグローバル(文字列全体を検索して見つかったものを全て置き換える)、これがないと最初に見つかったやつだけ変わる
             photo_path = internalPath.substring(internalPath.indexOf("uploads/"));
         }
-
-        await createExpense(req.session.userId,{amount,photo_path,description,expense_date,meal_type,nomikai});
-
-        const todayStr=getLocalDate();
+        const lastExpenseDate= await getLatestExpenseDate(req.session.userId);
+        const newExpenseId = await createExpense(req.session.userId, { amount, photo_path, description, expense_date, meal_type, nomikai });
+        
+        const createdExpenseData = {
+            id: newExpenseId, // IDがないとReactのkey指定などで困るため重要
+            user_id: req.session.userId,
+            amount,
+            photo_path,
+            description,
+            expense_date,
+            meal_type,
+            nomikai
+        };
         const user=await getUserById(req.session.userId);
-        let newTotalPoints = user.points;
+        //期間が空いているか確認
+        let gapInfo=null;
+        //最後の登校日が存在し、かつ今回の投稿が最後の投稿より後の場合のみ行う
+        if(lastExpenseDate&&expense_date>lastExpenseDate){
+            //2025-10-20みたいな形で保存されているdateをnewDateでmsに変換
+            const lastDate=new Date(lastExpenseDate);
+            const currentDate=new Date(expense_date);
+            const diffTime=currentDate-lastDate;
+            const diffDays=Math.ceil(diffTime/(1000*60*60*24));//ceilは切り上げてmsから日数に戻す
+            //中二日以上空いている場合
+            if(diffDays>2){
+                const avgAmount=await getAverageAmount(req.session.userId);
+                const gapStart=new Date(lastDate);
+                //空白期間の開始日を設定(最終投稿の翌日)
+                gapStart.setDate(gapStart.getDate()+1);
 
-        if(user.last_post_date!==todayStr){
-        //今日既にポイントをもらっていたら何もしない
+                const gapEnd=new Date(currentDate);
+                //空白期間の開始日を設定(今回の投稿の前日)
+                gapEnd.setDate(gapEnd.getDate()-1);
+
+                gapInfo={
+                    detected:true,
+                    startDate:gapStart.toISOString().split("T")[0],
+                    endDate:gapEnd.toISOString().split("T")[0],
+                    daysCount:diffDays-1,
+                    suggestedAmount:avgAmount
+                };
+            }
+        }
+        
+        const todayStr=getLocalDate();
+        
+        let newTotalPoints = user.points;
+        let newStreak=user.login_streak;
+        let pointsToAdd=0;
+        let shouldUpdateDate=false;
+        if(expense_date<todayStr){
+            //過去分を登録した場合
+            pointsToAdd=50;
+            shouldUpdateDate=false;
+        }else{
+
+
+            if(user.last_post_date!==todayStr){
+            //今日既にポイントをもらっていたら何もしない
             // まず getLocalDate() で取得した JST の「今日」から Date オブジェクトを（安全に）作成
             // "2025-10-20" -> "2025-10-20T00:00:00+09:00" として解釈させる
             
-            const todayJstDate = new Date(todayStr + "T00:00:00+09:00"); 
+                const todayJstDate = new Date(todayStr + "T00:00:00+09:00"); 
 
             // その日付のまま 1 日引く
-            todayJstDate.setDate(todayJstDate.getDate() - 1); 
+                todayJstDate.setDate(todayJstDate.getDate() - 1); 
             
             // "YYYY-MM-DD" 形式にフォーマットし直す (JSTの「昨日」)
-            const yesterdayStr = todayJstDate.getFullYear() + '-' + 
+                const yesterdayStr = todayJstDate.getFullYear() + '-' + 
                                 ('0' + (todayJstDate.getMonth() + 1)).slice(-2) + '-' + 
                                 ('0' + todayJstDate.getDate()).slice(-2);
 
-            let newStreak=user.login_streak;
-            let pointsToAdd=0;
+            
 
             //連続記録ボーナス
-            if(user.last_post_date===yesterdayStr){//2日目以降
-                newStreak+=5;
-                pointsToAdd=100+(newStreak*10);//二日目=200pt,3日目=250pt
-            }else{//1日目ならこっち
-                newStreak=5;
-                pointsToAdd=100;
-            }
-
-            newTotalPoints=user.points+pointsToAdd;
-
-            await updateUserGachaStats(req.session.userId,{
-                points:newTotalPoints,
-                streak:newStreak,
-                lastPostDate:todayStr
-            });
+                if(user.last_post_date===yesterdayStr){//2日目以降
+                    newStreak+=5;
+                    pointsToAdd=100+(newStreak*10);//二日目=200pt,3日目=250pt
+                }else{//1日目ならこっち
+                    newStreak=5;
+                    pointsToAdd=100;
+                }
+                shouldUpdateDate=true
+            }   
         }
-        res.status(200).json({message:"Expense added",newTotalPoints:newTotalPoints});
+        if(pointsToAdd>0){
+            newTotalPoints=user.points+pointsToAdd;
+            if(shouldUpdateDate){
+                //当日の場合、継続記録を伸ばす
+                await updateUserGachaStats(req.session.userId,{
+                    points:newTotalPoints,
+                    streak:newStreak,
+                    lastPostDate:todayStr
+                });
+            }else{//過去の場合はただポイントを更新するだけ
+                await updateUserPoints(req.session.userId,newTotalPoints);
+            }
+        }   
+        
+        res.status(200).json({ 
+            message: "Expense added", 
+            gapInfo: gapInfo, 
+            newTotalPoints: newTotalPoints,
+            addedExpense: createdExpenseData // これをフロント側でリストに追加する
+        });
     }catch(error){
          console.error("食事記録の追加中にエラー",error);
          res.status(500).send("Server error during expense creation");
@@ -300,12 +364,43 @@ router.get("/summary/:month",async(req,res)=>{
     }
     try{
         const {month}=req.params;
+         
+
         const summaries=await getMonthlySummarize(month);
         res.json(summaries);
         //summaries=[{username:xxx,foodTotal:xxxx,nomikaiTotal:xxxx},...]
     }catch(error){
         console.error("月次集計の取得中にエラー:",error);
         res.status(500).send("Server error");
+    }
+});
+//空白期間の一括埋め合わせ
+router.post("/expenses/bulk",async(req,res)=>{
+    if(!req.session.userId){
+        return res.status(401).send("Unauthorized");
+    }
+    try{
+        const {startDate,endDate,amount,meal_type,description}=req.body;
+        const start=new Date(startDate);
+        const end=new Date(endDate);
+        let count=0;
+        for (let d=new Date(start); d<=end;d.setDate(d.getDate()+1)){
+            const dateStr=d.toISOString().split("T")[0];
+            //未登録分を連続して登録
+            await createExpense(req.session.userId,{
+                amount:Number(amount),
+                photo_path:null,
+                description:description||"未登録分",
+                expense_date:dateStr,
+                meal_type:meal_type||"other",
+                nomikai:0
+            });
+            count++;
+        }
+        res.status(200).json({message:"未登録分を加えました"})
+    }catch(error){
+        console.error("一括登録中にエラー：",error);
+        res.status(500).send("Server error during bulk insert");
     }
 });
 

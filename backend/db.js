@@ -239,6 +239,32 @@ async function getMonthlySummarize(month){
 }//WHERE strftime('%Y-%m', expenses.expense_date)でexpensesテーブルの
 // expense_dateから年-月を取り出してそれがもらったmonthと同じものだけを取り出す
 //GROUP BY users.idでユーザーごとにまとめる
+
+//最新の食事記録の日付を取得(一括登録用)
+async function getLatestExpenseDate(userId){
+    const db =await dbPromise;
+    //日付順に並べて一番上のもの(LIMIT 1)を取得
+    const result = await db.get(
+        `SELECT expense_date FROM expenses WHERE userId = ? ORDER BY expense_date DESC LIMIT 1`,
+        [userId]
+    );
+    return result ? result.expense_date : null;
+
+}
+
+//過去の平均食費を計算する関数
+
+async function getAverageAmount(userId){
+    const db=await dbPromise;
+    //AVG機能を使って食費の平均を取ってもらう
+    const result=await db.get(
+        `SELECT AVG(amount) as avg FROM expenses WHERE userId=? AND meal_type !="nomikai"`,
+        [userId]
+    );
+    //ない場合は500円、あったら四捨五入(round)
+    return result && result.avg ? Math.round(result.avg) :500;
+}
+
 // --- コメント関連の関数 ---
 async function getCommentById(Id){
     const db=await dbPromise;
@@ -390,6 +416,8 @@ module.exports = {
     getBudget,
     setBudget,
     getMonthlySummarize,
+    getLatestExpenseDate,
+    getAverageAmount,
     getCommentById,
     getCommentByExpenseId,
     createComment,

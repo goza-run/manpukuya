@@ -21,12 +21,16 @@ function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled,on
 	const[editing,setIsEditing]=useState(null);
 	const[commenting,setIsCommenting]=useState(null);
 	const[isCharacterModal,setIsCharacterModal]=useState(false);
-	const[dialogues,setDialogues]=useState([])//解放済みセリフ
-	const[currentDialogue,setCurrentDialogue]=useState("")//表示中のセリフ
-	const[characters,setCharacters]=useState([])//解放済みキャラ
-	const[isJumping,setIsJumping]=useState(false)
+	const[dialogues,setDialogues]=useState([]);//解放済みセリフ
+	const[currentDialogue,setCurrentDialogue]=useState("");//表示中のセリフ
+	const[characters,setCharacters]=useState([]);//解放済みキャラ
+	const[isJumping,setIsJumping]=useState(false);
+	const [showGapModal,setGapModal]=useState(false);
+	const [gapData,setGapData]=useState(null);
+	const [bulkAmount,setBulkAmount]=useState("");
+	const [inputMethod,setInputMethod]=useState("average");//手入力か平均か
 	const timeoutIdRef=useRef(null);
-	const audioRef=useRef(null)
+	const audioRef=useRef(null);  
 	// 食費データ、目標金額を取得する非同期関数
 	const fetchExpense = async () => {
 		// 食費データを取得するAPIリクエスト
@@ -75,6 +79,14 @@ function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled,on
 			if(data.newTotalPoints!==undefined){
 				onUpdatePoints(data.newTotalPoints);
 			}
+			if(data.gapInfo&&data.gapInfo.detected){
+				setGapData(data.gapInfo);
+				setBulkAmount("");
+				setInputMethod("average");
+				setGapModal(true);
+				} else{
+					alert("登録しました！");
+				}
 			fetchExpense(); // リストを再取得して更新
 		}
 	};
@@ -110,6 +122,41 @@ function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled,on
 		setIsEditModal(true);
 	}
 
+	//一括登録の処理
+	const handleBulkRegister=async()=>{
+		if(!gapData) return;
+		//平均なら平均値を返して、それ以外なら手入力を返す
+		const finalAmount=inputMethod=="average" ? gapData.suggestedAmount :bulkAmount;
+		if(!finalAmount||finalAmount<=0){
+			alert("金額を正しく入力してください");
+			return;
+		}
+		try{
+			const response=await fetch(`${API_BASE_URL}/api/expenses/bulk`,{
+				method:"POST",
+				headers:{"Content-Type":"application/json"},
+				body:JSON.stringify({
+					userId:session.userId,
+					startDate:gapData.startDate,
+					endDate:gapData.endDate,
+					amount:finalAmount,
+					meal_type:"other",
+					description:"未登録(一括)"
+				}),
+				credentials:"include"
+			});
+			if(response.ok){
+				alert("空白期間の文をまとめて登録しました！");
+				setGapModal(false);
+				setGapData(null);
+				fetchExpense();
+			}else{
+				alert("一括登録に失敗しました...");
+			}
+		}catch(error){
+			console.error("Bulk register error",error);
+		}
+	}
 	//配列を月毎にグループ分け（集約処理)
 	const groupedExpenses=expenses.reduce((acc,expense)=>{
 		const month=expense.expense_date.substring(0,7);//2025-09-17から2025-09だけ取り出す
@@ -314,6 +361,67 @@ function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled,on
 				</p>
 				<p>※ma：某定食チェーンで食べることのできる定食の最低金額(1ma=600円)のこと</p>
 				<p>理想のma/dayは目標金額を達成するために1日平均何maで過ごせば良いか</p>
+				{showGapModal&&gapData&&(
+				<div className="modal-overlay">
+					<div className="modal-content">
+						<h3>おかえりなさい！！</h3>
+						<p>しばらく期間が空いているようです。<br/>
+							未登録の期間({gapData.daysCount}日分)を<br/>
+							まとめて登録しますか？
+						</p>
+						<div className="gap-info-box">
+							<p><strong>対象期間</strong>{gapData.startDate}〜{gapData.endDate}</p>
+						</div>
+
+						<div className="input-method-section">
+							<label className={`radio-label ${inputMethod=="average"? "selected":""}`}>
+								<input
+									type="radio"
+									name="method"
+									value="average"
+									checked={inputMethod==="average"}
+									onChange={()=>setInputMethod("average")}
+								/>
+								<div>
+									<span className="method-title">平均額を使う</span>
+									<span className="method-value">{gapData.suggestedAmount}円/日</span>
+								</div>
+							</label>
+
+							<label className={`radio-label ${inputMethod=="manual"?"selected":""}`}>
+								<input
+									type="radio"
+									name="method"
+									value="manual"
+									checked={inputMethod==="manual"}
+									onChange={()=>setInputMethod("manual")}
+								/>
+								<div style={{width:"100%"}}>
+									<span className="method-title">手入力する、1日あたり</span>
+									{inputMethod==="manual"&&(
+										<input
+											type="number"
+											className="manual-input"
+											value={bulkAmount}
+											onChange={(e)=>setBulkAmount(e.target.value)}
+											placeholder="金額を入力"
+											autoFocus
+										/>
+									)}
+								</div>
+							</label>
+						</div>
+						<div className="modal-actions" style={{marginTop:"1.5rem",display:"flex",gap:"10px"}}>
+							<button onClick={handleBulkRegister} className="btn-primary">
+								登録する
+							</button>
+							<button onClick={()=>setGapModal(false)} className="btn-secondary">
+								キャンセル
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 			</div>
 			<h3>食事を記録してね</h3>
 			<ExpenseForm onAddExpense={handleAddExpense} />
@@ -350,6 +458,7 @@ function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled,on
 					</React.Fragment>
 				);
 			})}
+			
 			{isEditModal&&(
 				<EditExpenseModal
 					expense={editing}
