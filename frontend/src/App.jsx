@@ -12,6 +12,7 @@ import SummaryPage from './pages/SummaryPage.jsx';
 import { defaultCharacter } from './characters.js';
 import { characters } from './characters.js';
 import GachaPage from './pages/GachaPage.jsx';
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   //ログイン認証のステート
@@ -309,6 +310,7 @@ function App() {
 				// 非ログイン時はLoginPageを表示
 				<LoginPage onLogin={handleLogin} />//onLoginをhandleloginとしてLoginpageを描画
 			)}
+      <Analytics/>
 		</div>
   )
 
