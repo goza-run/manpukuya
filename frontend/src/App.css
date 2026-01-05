@@ -171,102 +171,122 @@ button.comment:hover{
 	}
 }
 
-/* --- モーダル（一括登録・編集共通）のデザイン修正 --- */
-
-/* 背景の黒いフィルター */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* 半透明の黒 */
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
-    align-items: center; /* 画面のど真ん中に配置 */
-    z-index: 1000; /* 最前面に */
+    align-items: center;
+    z-index: 1000;
 }
 
-/* モーダル本体（白い箱） */
+/* モーダル本体 */
 .modal-content {
     background-color: white;
-    padding: 20px;      /* 内側の余白（重要：これで文字が端に張り付かない） */
-    border-radius: 8px; /* 角丸 */
-    width: 90%;         /* スマホ：画面の90%の幅を使う */
-    max-width: 500px;   /* PC：最大でも500pxまで（広がりすぎ防止） */
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;          /* スマホでの幅 */
+    max-width: 500px;    /* PCでの最大幅 */
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    text-align: left;   /* 重要：テキストを左揃えに戻す（読みやすくする） */
-    box-sizing: border-box; /* paddingを含めた幅計算にする */
+    text-align: left;
+    box-sizing: border-box;
 }
 
-/* ラジオボタンの選択肢エリア */
+/* 選択肢エリア */
 .input-method-section {
     display: flex;
-    flex-direction: column; /* 縦並び */
-    gap: 10px;
+    flex-direction: column;
+    gap: 15px; /* ボタン同士の間隔を少し広げました */
     margin: 15px 0;
 }
 
-/* ラジオボタンのラベル（枠） */
+/* ラジオボタンの枠（ここを修正！） */
 .radio-label {
     display: flex;
-    align-items: flex-start; /* 上揃え */
-    padding: 10px;
+    align-items: center; /* 垂直方向も真ん中に */
+    padding: 15px;       /* 指で押しやすいように広めにする */
     border: 1px solid #ddd;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.2s;
+    width: 100%;         /* 横幅いっぱい使う */
+    box-sizing: border-box;
 }
 
-/* 選択されているラジオボタンのデザイン */
+/* 選択時のデザイン */
 .radio-label.selected {
-    background-color: #e6f7ff; /* 薄い青背景 */
-    border-color: #1890ff;     /* 青い枠線 */
+    background-color: #e6f7ff;
+    border-color: #1890ff;
+    border-width: 2px; /* 選択していることがわかりやすいように太く */
 }
 
-/* ラジオボタン本体 */
+/* ★ここが最重要修正ポイント★ */
+/* ラジオボタン本体が暴れないように強制的にサイズを固定します */
 .radio-label input[type="radio"] {
-    margin-right: 10px;
-    margin-top: 5px; /* テキストの1行目に高さを合わせる */
-    width: auto;     /* グローバルCSSのwidth:100%を打ち消す */
+    width: 20px !important;  /* 【重要】100%を強制上書き */
+    height: 20px !important; 
+    margin-right: 15px !important;
+    flex-shrink: 0;          /* 潰れないようにする */
 }
 
-/* 金額などのテキスト */
+/* テキストが入っている箱（文字が潰れないように守る） */
+.radio-label div {
+    flex: 1; /* 残りのスペースを全部使うようにする */
+    display: flex;
+    flex-direction: column;
+}
+
+/* 文字のデザイン */
 .method-title {
     font-weight: bold;
-    display: block;
-    margin-bottom: 4px;
+    font-size: 1rem;
+    line-height: 1.4;
+    word-break: keep-all; /* 勝手な改行を防ぐ */
 }
 
 .method-value {
     color: #555;
-    font-size: 0.9em;
+    font-size: 0.9rem;
+    margin-top: 4px;
 }
 
-/* 手入力のインプット欄 */
+/* 手入力欄 */
 .manual-input {
     width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    box-sizing: border-box; /*枠からはみ出さないようにする*/
+    padding: 10px;
+    margin-top: 8px;
+    box-sizing: border-box;
+    font-size: 1rem; /* スマホで入力しやすい文字サイズ */
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 /* ボタンエリア */
 .modal-actions {
     display: flex;
-    justify-content: flex-end; /* 右寄せ */
+    justify-content: flex-end;
     gap: 10px;
+    margin-top: 20px;
 }
 
-/* 一括登録用：レスポンシブ調整 */
-@media (max-width: 480px) {
-    .modal-content {
-        padding: 15px; /* スマホなら少し余白を詰める */
-        width: 95%;    /* さらに幅を確保 */
-    }
-    
-    .modal-content h3 {
-        font-size: 1.2rem; /* タイトルが大きすぎないように */
-        margin-top: 0;
-    }
+/* ボタンのスタイルも整えます */
+.btn-primary {
+    background-color: #5cb85c;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+.btn-secondary {
+    background-color: #ccc;
+    color: #333;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
 }
