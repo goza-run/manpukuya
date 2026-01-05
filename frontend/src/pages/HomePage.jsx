@@ -370,7 +370,7 @@ function HomePage({session,onCharacterSelect,targetNotiId,onTargetNotiHandled,on
 							まとめて登録しますか？
 						</p>
 						<div className="gap-info-box">
-							<p><strong>対象期間</strong>{gapData.startDate}〜{gapData.endDate}</p>
+							<p><strong>対象期間</strong><br/>{gapData.startDate}〜{gapData.endDate}</p>
 						</div>
 
 						<div className="input-method-section">
